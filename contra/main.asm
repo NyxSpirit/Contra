@@ -8,6 +8,10 @@ include kernel32.inc
 include gdi32.inc
 include shell32.inc
 include winmm.inc
+include gdiplus.inc
+include ole32.inc
+includelib ole32.lib
+includelib gdiplus.lib
 includelib winmm.lib
 includelib shell32.lib
 includelib gdi32.lib
@@ -15,17 +19,13 @@ includelib kernel32.lib
 includelib user32.lib
 includelib masm32.lib
 
-IDB_BITMAP1 EQU  101
 IDR_WAVE1 EQU 104
 
-VK_LEFT EQU 025h
-VK_UP EQU 026h
-VK_OEM_5 EQU 0DCh
-
 WinMain proto :DWORD, :DWORD, :DWORD, :DWORD 
-
+UnicodeStr			PROTO :DWORD,:DWORD
 .data
 ;============================== resources declarment=============
+ hgdiImage db "Res\\player_die_left5.png",0
 
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
@@ -33,14 +33,19 @@ WinMain proto :DWORD, :DWORD, :DWORD, :DWORD
 
  hero_posx DWORD 0
  hero_posy DWORD 0
+ 
+
 
 .data?
- hInstance HINSTANCE ? 
- hBGMThread DWORD ?
+ ;=============================  Window and View Handles ========
+ hInstance HINSTANCE ?
  dwThreadID DWORD ?
- hBitmap dd ?
+ hPlayerImage dd ?
  hMusic dd ?
 
+ hBGMThread DWORD ?
+
+ buffer dd 32 dup(?)
 .code
 
 
@@ -63,7 +68,7 @@ CmdShow:DWORD
 	 mov wc.cbWndExtra, NULL
 	 push hInstance
 	 pop wc.hInstance
-	 mov wc.hbrBackground, COLOR_WINDOW+1 
+	 mov wc.hbrBackground, 1
 	 mov wc.lpszMenuName, NULL
 	 mov wc.lpszClassName, offset ClassName
 	 invoke LoadIcon, NULL, IDI_APPLICATION
@@ -100,35 +105,41 @@ CmdShow:DWORD
    LOCAL hdc:HDC 
    LOCAL hMemDC:HDC 
    LOCAL rect:RECT 
+   LOCAL token:DWORD
+   LOCAL startupinput: GdiplusStartupInput
+   LOCAL hGraphics: DWORD
    .if uMsg == WM_CREATE
-		invoke LoadBitmap, hInstance, IDB_BITMAP1
-		mov hBitmap, eax
 		
+		mov startupinput.GdiplusVersion, 1 
+		invoke GdiplusStartup, addr token, addr startupinput, NULL
+		invoke	UnicodeStr,ADDR hgdiImage, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerImage
+		 
 		invoke CreateThread, 0, 0, SoundProc, 0BADF00Dh,0,ADDR dwThreadID
 		mov hBGMThread, eax
+
+
    .elseif uMsg == WM_PAINT 
-		invoke BeginPaint,hWnd,addr ps 
-		mov    hdc,eax 
-		invoke CreateCompatibleDC,hdc 
-		mov    hMemDC,eax 
-		invoke SelectObject,hMemDC,hBitmap 
-		invoke GetClientRect,hWnd,addr rect 
-		invoke BitBlt,hdc,hero_posx,hero_posy,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
-		invoke DeleteDC,hMemDC 
-		invoke EndPaint,hWnd,addr ps
+
+		invoke GdipCreateFromHWND, hWnd, addr hGraphics 
+
+		invoke GdipDrawImageI, hGraphics, hPlayerImage,hero_posx,hero_posy
+
+		invoke GdipDeleteGraphics, hGraphics
 	.elseif uMsg == WM_KEYDOWN
-		.if wParam == VK_LEFT 
+		.if wParam == VK_RIGHT
 			add hero_posx, 5
 			invoke InvalidateRect, hWnd, NULL, 1
 		.elseif wParam == VK_DOWN
 			add hero_posy, 5
 			invoke InvalidateRect, hWnd, NULL, 1
-			mov hMusic, eax
 		.elseif wParam == VK_UP
-			
+			.if hero_posy >= 5
+				sub hero_posy, 5
+			.endif
+			invoke InvalidateRect, hWnd, NULL, 1
 		.endif
 	.elseif uMsg == WM_DESTROY
-		invoke DeleteObject, hBitmap
 		invoke DeleteObject, hMusic
 		invoke CloseHandle,hBGMThread
 		invoke PostQuitMessage, 0
@@ -140,6 +151,20 @@ CmdShow:DWORD
 	ret	
  WndProc endp 
 
+ UnicodeStr	PROC USES esi Source:DWORD,Dest:DWORD
+												; convert a string to UNICODE
+	mov		esi,Source
+	mov		edx,Dest
+	xor		eax,eax
+	sub		eax,1
+@@:
+	add		eax,1
+	movzx	ecx,BYTE PTR [esi+eax]
+	mov		WORD PTR [edx+eax*2],cx
+	test	ecx,ecx
+	jnz		@b
+	ret
 
+UnicodeStr	ENDP
 
 end start 
