@@ -21,33 +21,65 @@ includelib masm32.lib
 
 IDR_WAVE1 EQU 104
 
+MAX_JUMP_HEIGHT EQU 80
+CONTRA_BASIC_MOV_SPEED EQU 5
+CONTRA_BASIC_JUMP_SPEED EQU 15
+CONTRA_FLOAT_HEIGHT EQU 6
+CONTRA_FLOAT_SPEED EQU 2
+CONTRA_HEIGHT EQU 25
 WinMain proto :DWORD, :DWORD, :DWORD, :DWORD 
 UnicodeStr			PROTO :DWORD,:DWORD
+StrConcat	proto :PTR BYTE,:PTR BYTE
 .data
-;============================== resources declarment=============
- hgdiImage db "Res\\player_die_left5.png",0
+;============================== resources declarment=============\
+ playerMoveRightFile db "Res\\player\\player_right",0
+ IMAGETYPE_BMP db "bmp", 0  
+ IMAGeTYPE_PNG db "png", 0
+ wallBGFile db "Res\\map\\map_wall1.bmp",0
+ playerSwimShootRightFile db "Res\\player\\player_water_right1.bmp", 0
+ playerSwimRightFile db "Res\\player\\player_water_right2.bmp", 0
 
+;============================== Window Params =========
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
 
-
- hero_posx DWORD 0
- hero_posy DWORD 0
+PAGE_SCALE REAL4 0.1
  
-
+;=============================== Game params ===========
+ contraPosx SDWORD 0
+ contraPosy SDWORD 200
+ contraMoveDx SDWORD 0
+ contraMoveDy SDWORD 0 
+ contraShootDx SBYTE 0
+ contraShootDy SBYTE 0
+ contraJump BYTE 0
+ contraCrawl BYTE 0
+ contraMoveRight BYTE 0
+ contraMoveLeft BYTE 0
+ contraShoot BYTE 0
+ contraSwim BYTE 0
 
 .data?
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
- dwThreadID DWORD ?
- hPlayerImage dd ?
+
+ hPlayerMoveRightImage dd 7 dup (?)
+ hPlayerSwimRightImage dd ?
+ hPlayerSwimShootRightImage dd ?
+ hPlayerImage dd ? 
+ hWallBGImage dd ?
  hMusic dd ?
 
+ ;==============  Thread Handles
+ dwThreadID DWORD ?
  hBGMThread DWORD ?
+ hRunThread DWORD ?
+ ;==============  Others
+ keyState BYTE 256 dup (?)
+ token DWORD ?
+ startupinput GdiplusStartupInput<?>
 
- buffer dd 32 dup(?)
 .code
-
 
 start:
  invoke GetModuleHandle, NULL
@@ -79,8 +111,8 @@ CmdShow:DWORD
 	 invoke RegisterClassEx, addr wc 
 
 	 invoke CreateWindowEx, 0, addr ClassName, addr AppName, 
-		WS_OVERLAPPEDWINDOW or WS_VISIBLE, CW_USEDEFAULT, 
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+		WS_VISIBLE or  WS_DLGFRAME, CW_USEDEFAULT, 
+		CW_USEDEFAULT, 500, 400, NULL,
 		NULL, hInst, NULL
 	 mov hwnd, eax 
 
@@ -95,53 +127,220 @@ CmdShow:DWORD
 	 ret
  WinMain endp 
  
-  SoundProc PROC
+ SoundProc PROC
 	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
 	ret
  SoundProc ENDP
+
+ RunProc PROC hWnd:HWND
+	Local jumpHeight: DWORD
+	Local moveImageIndex: BYTE
+	LOCAL rect: RECT 
+	mov jumpHeight, 0
+	mov moveImageIndex, 0
+	.while TRUE
+		.if contraSwim == 1
+			.if jumpHeight < CONTRA_FLOAT_HEIGHT
+				mov contraMoveDy, -CONTRA_FLOAT_SPEED
+				add jumpHeight, CONTRA_FLOAT_SPEED
+			.else
+				mov contraMoveDy, CONTRA_FLOAT_SPEED
+			.endif
+		.else
+			.if contraJump == 1 
+				.if jumpHeight < MAX_JUMP_HEIGHT
+					mov contraMoveDy, -CONTRA_BASIC_JUMP_SPEED
+					add jumpHeight, CONTRA_BASIC_JUMP_SPEED
+				.else
+					mov contraMoveDy, CONTRA_BASIC_JUMP_SPEED
+				.endif
+			.endif
+		.endif
+			
+		.if contraMoveRight == 1
+			mov contraMoveDx, CONTRA_BASIC_MOV_SPEED
+		.elseif contraMoveLeft == 1
+			mov contraMoveDx, -CONTRA_BASIC_MOV_SPEED
+		.else
+			mov contraMoveDx, 0
+		.endif
+
+		mov eax, contraMoveDx
+		add contraPosx, eax
+		mov rect.left, eax
+		mov rect.right, eax
+		mov eax, contraMoveDy
+		add contraPosy, eax
+		mov rect.top, eax
+		mov rect.bottom, eax
+		.if contraMoveRight == 1
+			.if contraSwim == 1
+				mov eax, hPlayerSwimRightImage
+				mov hPlayerImage, eax
+			.else
+				inc moveImageIndex
+				movzx esi, moveImageIndex
+				mov eax, hPlayerMoveRightImage[esi * TYPE hPlayerMoveRightImage];
+				mov hPlayerImage, eax
+				.if moveImageIndex == 6
+					mov moveImageIndex, 1
+				.endif
+			.endif
+		.else
+			.if contraSwim == 1
+				mov eax, hPlayerSwimRightImage
+				mov hPlayerImage, eax
+			.else
+				mov eax, hPlayerMoveRightImage;
+				mov hPlayerImage, eax
+			.endif
+		.endif
+
+		invoke InvalidateRect, hWnd, NULL, 1
+		;invoke UpdateWindow, hWnd
+		; ================  collision check
+		.if contraSwim == 1
+			.if contraPosx > 400			;Horizon check   --- water 2 ground
+				mov contraSwim, 0
+				mov contraJump, 0
+				mov jumpHeight, 0	
+				mov contraMoveDy, 0
+				sub contraPosy, CONTRA_HEIGHT
+			.endif
+		.endif
+		.if contraPosy > 300            ;vertical check  --- Water
+			mov contraJump, 0
+			mov jumpHeight, 0	
+			mov contraMoveDy, 0
+
+			mov contraSwim, 1
+		.endif
+		invoke Sleep, 100
+	.endw
+	ret
+ RunProc ENDP
+
+ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
+	LOCAL fileName [32] :BYTE
+	LOCAL fileNameBuffer [32] :BYTE
+	LOCAL hImage: DWORD
+	mov ecx, 0
+	@@:
+	    push ecx
+		mov fileName, 0
+		invoke  StrConcat, addr fileName, basicFileName
+		mov esi, eax
+		movzx eax, cl
+		add al, '1'
+		mov fileName[esi*TYPE fileName], al
+		inc esi
+		mov fileName[esi*TYPE fileName], '.'
+		inc esi
+		mov fileName[esi*TYPE fileName], 0
+
+		invoke StrConcat, addr fileName, imageTypeName
+		invoke	UnicodeStr,ADDR	 fileName, ADDR fileNameBuffer
+		invoke GdipLoadImageFromFile, addr fileNameBuffer,	addr hImage
+		mov eax, hImage
+		pop ecx
+		mov esi, seriesHandle
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		mov DWORD PTR [esi], eax
+		inc ecx
+	cmp cl, number
+	jne @b
+	ret
+ LoadImageSeries ENDP
+ 
+ LoadImageResources PROC
+	
+
+	ret
+ LoadImageResources ENDP
+
 
  WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
    LOCAL ps:PAINTSTRUCT 
    LOCAL hdc:HDC 
    LOCAL hMemDC:HDC 
    LOCAL rect:RECT 
-   LOCAL token:DWORD
-   LOCAL startupinput: GdiplusStartupInput
    LOCAL hGraphics: DWORD
+   LOCAL buffer [32] :BYTE
    .if uMsg == WM_CREATE
 		
 		mov startupinput.GdiplusVersion, 1 
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
-		invoke	UnicodeStr,ADDR hgdiImage, ADDR buffer
-		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerImage
-		 
-		invoke CreateThread, 0, 0, SoundProc, 0BADF00Dh,0,ADDR dwThreadID
+
+		call LoadImageResources
+		invoke LoadImageSeries, ADDR playerMoveRightFile, 7, addr hPlayerMoveRightImage, ADDR IMAGETYPE_BMP
+		
+		invoke UnicodeStr, ADDR playerSwimRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimRightImage
+
+		mov eax, hPlayerMoveRightImage;
+		mov hPlayerImage, eax
+
+		invoke UnicodeStr, ADDR wallBGFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hWallBGImage
+
+
+		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
-
-
+		
+		invoke CreateThread, 0, 0, RunProc, hWnd,0, ADDR dwThreadID
+		mov hRunThread, eax
    .elseif uMsg == WM_PAINT 
 
 		invoke GdipCreateFromHWND, hWnd, addr hGraphics 
+		
+		;invoke GdipGetPageScale, hGraphics, addr PAGE_SCALE
 
-		invoke GdipDrawImageI, hGraphics, hPlayerImage,hero_posx,hero_posy
+		invoke GdipDrawImageI, hGraphics, hPlayerImage,contraPosx,contraPosy
+		invoke GdipDrawImageI, hGraphics, hWallBGImage, 420, 300 
 
 		invoke GdipDeleteGraphics, hGraphics
-	.elseif uMsg == WM_KEYDOWN
-		.if wParam == VK_RIGHT
-			add hero_posx, 5
-			invoke InvalidateRect, hWnd, NULL, 1
-		.elseif wParam == VK_DOWN
-			add hero_posy, 5
-			invoke InvalidateRect, hWnd, NULL, 1
-		.elseif wParam == VK_UP
-			.if hero_posy >= 5
-				sub hero_posy, 5
+		 
+	.elseif uMsg == WM_KEYDOWN 
+		invoke GetKeyboardState, addr keyState 
+		.if keyState[VK_D] >= 128
+			mov contraMoveRight, 1
+		.elseif keyState[VK_A] >= 128
+			mov contraMoveLeft, 1
+		.endif
+		.if keyState[VK_S] >= 128
+			mov contraCrawl, 1
+		.endif
+		.if keyState[VK_K] >= 128
+			mov contraJump, 1
+		.endif
+		.if keyState[VK_J] >= 128
+			mov contraShoot, 1
+		.endif
+		invoke InvalidateRect, hWnd, NULL, 1
+	.elseif uMsg == WM_KEYUP
+		.if wParam == VK_D			
+			mov contraMoveRight, 0
+			invoke GetKeyboardState, addr keyState 
+			.if keyState[VK_D] >= 128
+				mov contraMoveRight, 1
+			.elseif keyState[VK_A] >= 128
+				mov contraMoveLeft, 1
 			.endif
-			invoke InvalidateRect, hWnd, NULL, 1
+		.elseif wParam == VK_A
+			mov contraMoveLeft, 0
+		.elseif wParam == VK_J
+			mov contraShoot, 0
+		.elseif wParam == VK_S
+			mov contraCrawl, 0
 		.endif
 	.elseif uMsg == WM_DESTROY
 		invoke DeleteObject, hMusic
 		invoke CloseHandle,hBGMThread
+		invoke CloseHandle,hRunThread
+		invoke GdiplusShutdown, token
 		invoke PostQuitMessage, 0
 	.else
 		invoke DefWindowProc, hWnd, uMsg, wParam, lParam
@@ -166,5 +365,20 @@ CmdShow:DWORD
 	ret
 
 UnicodeStr	ENDP
-
+ StrConcat PROC USES esi edi ecx,
+	target : PTR BYTE,
+	source : PTR BYTE
+	
+	cld
+	INVOKE StrLen, [target]
+	mov edi, eax
+	add edi, target
+	mov esi, source
+	INVOKE StrLen, [source]
+	mov ecx, eax
+	inc ecx
+	rep movsb
+	INVOKE StrLen, [target]
+	ret
+StrConcat ENDP
 end start 

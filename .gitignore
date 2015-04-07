@@ -2,3 +2,6 @@
 *.suo
 *.suo
 *.log
+contra/Debug/contra.lastbuildstate
+contra/Debug/contra.res
+contra/Debug/main.obj
