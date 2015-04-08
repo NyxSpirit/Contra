@@ -1,5 +1,4 @@
 TITLE main.asm      
-    .386      
     .model flat,stdcall      
     option casemap:none  
 
@@ -33,7 +32,9 @@ CONTRA_FLOAT_HEIGHT EQU 6
 CONTRA_FLOAT_SPEED EQU 2
 CONTRA_HEIGHT EQU 25
 
-
+CollisionJudge PROTO :PTR CollisionRect,:PTR CollisionRect
+rect1	CollisionRect	<10,20,<1,2>>
+rect2	CollisionRect	<50,50,<2,2>>
 .code
 
 start:
@@ -64,6 +65,7 @@ CmdShow:DWORD
 	 invoke LoadCursor, NULL, IDC_ARROW
 	 mov wc.hCursor, eax
 	 invoke RegisterClassEx, addr wc 
+	 invoke CollisionJudge, ADDR rect1, ADDR rect2
 
 	 invoke CreateWindowEx, 0, addr ClassName, addr AppName, 
 		WS_VISIBLE or  WS_DLGFRAME, CW_USEDEFAULT, 
