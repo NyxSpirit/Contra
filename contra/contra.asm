@@ -1,6 +1,8 @@
-.386
-.model flat, stdcall
-option casemap :none
+TITLE main.asm      
+    .386      
+    .model flat,stdcall      
+    option casemap:none  
+
 include windows.inc
 include user32.inc
 include masm32.inc
@@ -10,6 +12,7 @@ include shell32.inc
 include winmm.inc
 include gdiplus.inc
 include ole32.inc
+
 includelib ole32.lib
 includelib gdiplus.lib
 includelib winmm.lib
@@ -19,6 +22,8 @@ includelib kernel32.lib
 includelib user32.lib
 includelib masm32.lib
 
+include contra.inc
+
 IDR_WAVE1 EQU 104
 
 MAX_JUMP_HEIGHT EQU 80
@@ -27,57 +32,7 @@ CONTRA_BASIC_JUMP_SPEED EQU 15
 CONTRA_FLOAT_HEIGHT EQU 6
 CONTRA_FLOAT_SPEED EQU 2
 CONTRA_HEIGHT EQU 25
-WinMain proto :DWORD, :DWORD, :DWORD, :DWORD 
-UnicodeStr			PROTO :DWORD,:DWORD
-StrConcat	proto :PTR BYTE,:PTR BYTE
-.data
-;============================== resources declarment=============\
- playerMoveRightFile db "Res\\player\\player_right",0
- IMAGETYPE_BMP db "bmp", 0  
- IMAGeTYPE_PNG db "png", 0
- wallBGFile db "Res\\map\\map_wall1.bmp",0
- playerSwimShootRightFile db "Res\\player\\player_water_right1.bmp", 0
- playerSwimRightFile db "Res\\player\\player_water_right2.bmp", 0
 
-;============================== Window Params =========
- ClassName db "WinClass", 0
- AppName db "Contra", 0 
-
-PAGE_SCALE REAL4 0.1
- 
-;=============================== Game params ===========
- contraPosx SDWORD 0
- contraPosy SDWORD 200
- contraMoveDx SDWORD 0
- contraMoveDy SDWORD 0 
- contraShootDx SBYTE 0
- contraShootDy SBYTE 0
- contraJump BYTE 0
- contraCrawl BYTE 0
- contraMoveRight BYTE 0
- contraMoveLeft BYTE 0
- contraShoot BYTE 0
- contraSwim BYTE 0
-
-.data?
- ;=============================  Window and View Handles ========
- hInstance HINSTANCE ?
-
- hPlayerMoveRightImage dd 7 dup (?)
- hPlayerSwimRightImage dd ?
- hPlayerSwimShootRightImage dd ?
- hPlayerImage dd ? 
- hWallBGImage dd ?
- hMusic dd ?
-
- ;==============  Thread Handles
- dwThreadID DWORD ?
- hBGMThread DWORD ?
- hRunThread DWORD ?
- ;==============  Others
- keyState BYTE 256 dup (?)
- token DWORD ?
- startupinput GdiplusStartupInput<?>
 
 .code
 
