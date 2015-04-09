@@ -32,7 +32,19 @@ CONTRA_FLOAT_HEIGHT EQU 6
 CONTRA_FLOAT_SPEED EQU 2
 CONTRA_HEIGHT EQU 25
 
-CollisionJudge PROTO :PTR CollisionRect,:PTR CollisionRect
+CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
+InitMap			PROTO
+ResetStat		PROTO
+Action			PROTO	:PTR Hero,:DWORD
+ChangeHeroDirection	PROTO :PTR Hero,:DWORD
+ChangeHeroStat	PROTO	:PTR Hero,:DWORD
+SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
+BridgeBomb		PROTO	:PTR Bridge
+ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
+TowerShoot		PROTO	:PTR Tower,:DWORD
+TowerDamage		PROTO	:PTR Tower
+ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
+ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
 rect1	CollisionRect	<10,20,<1,2>>
 rect2	CollisionRect	<50,50,<2,2>>
 .code

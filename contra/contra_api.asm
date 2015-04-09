@@ -107,8 +107,8 @@ CollisionJudge ENDP
 
 
 ;=================================
-InitMap		PROC
-
+InitMap		PROC	
+	
 InitMap ENDP
 
 ;=================================
@@ -117,11 +117,179 @@ ResetStat	PROC
 ResetStat ENDP
 
 ;=================================
-Action		PROC
-	
+;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
+Action		PROC	hero:PTR Hero,command:DWORD
+	mov		esi,hero
+	;cmd shoot
+	.if		command == 5
+			mov	[esi].Hero.shoot,1
+	.endif
+	.if		command == 6
+			mov		[esi].Hero.shoot,0
+	.endif
+
+	;cmd die
+	.if		command == 4
+			mov		eax,[esi].Hero.life
+			sub		eax,1
+			mov		[esi].Hero.life,eax
+			mov		[esi].Hero.action,4
+	.endif
+
+	;cmd lie
+	.if		command == 3
+			mov		eax,[esi].Hero.swim
+			.if		eax == 1
+			.else
+					mov	[esi].Hero.action,3
+			.endif
+	.endif
+
+	;cmd jump
+	.if		command == 2
+			mov		eax,[esi].Hero.swim
+			.if		eax == 1
+			.else
+					mov	[esi].Hero.action,2
+			.endif
+	.endif
+
+
+	;cmd run
+	.if		command == 1
+			mov		[esi].Hero.action,1
+	.endif
+	ret
 Action ENDP
+;==================================
 
+;==================================
+;direction	angle 360:initial,0:up,45:up-right,90:right,180:down:270:left...
+ChangeHeroDirection	PROC	hero:PTR Hero,direction:DWORD
+	mov		esi,hero
+	mov		eax,direction
+	mov		[esi].Hero.direction,eax
+	ret
+ChangeHeroDirection	ENDP
+;==================================
 
+;==================================
+;stat:0:init,1:swim,
+ChangeHeroStat	PROC	hero:PTR Hero,stat:DWORD
+	mov		esi,hero
+	mov		eax,stat
+	.if		eax == 0
+			mov	[esi].Hero.swim,0
+	.elseif	eax == 1
+			mov	[esi].Hero.swim,1
+	.endif
+	ret
+ChangeHeroStat	ENDP
+;==================================
+
+;==================================
+SwitchWeapon	PROC	hero:PTR Hero,weapon:PTR Weapon
+	mov		esi,hero
+	mov		eax,weapon
+	mov		ebx,[eax].Weapon.w_type
+	mov		[esi].Hero.weapon,ebx
+
+	ret
+SwitchWeapon	ENDP
+;==================================
+
+;==================================
+BridgeBomb	PROC	bridge:PTR Bridge
+	mov		esi,bridge
+	mov		[esi].Bridge.bomb,1
+	ret
+BridgeBomb	ENDP
+;==================================
+
+;==================================
+ChangeTowerDirection	PROC	tower:PTR Tower,direction:DWORD
+	mov		esi,tower
+	mov		eax,direction
+	mov		[esi].Tower.direction,eax
+	ret	
+ChangeTowerDirection	ENDP
+;==================================
+
+;==================================
+;cmd  shoot:1,cancelshoot:0
+TowerShoot		PROC		tower:PTR Tower,cmd:DWORD
+	mov		esi,tower
+	mov		eax,cmd
+	mov		[esi].Tower.shoot,eax
+
+	ret
+TowerShoot		ENDP
+;==================================
+
+;==================================
+TowerDamage	PROC		tower:PTR Tower
+	mov		esi,tower
+	mov		eax,[esi].Tower.life
+	sub		eax,1
+	mov		[esi].Tower.life,eax
+	
+	ret
+TowerDamage	ENDP
+;==================================
+
+;==================================
+ChangeBulletPosition	PROC	bullet:PTR Bullet,position:PTR Position
+	mov		esi,bullet
+	mov		eax,position
+	mov		ebx,[eax].Position.pos_x
+	mov		ecx,[eax].Position.pos_y
+	mov		[esi].Bullet.position.pos_x,ebx
+	mov		[esi].Bullet.position.pos_y,ecx
+	ret
+ChangeBulletPosition ENDP
+;==================================
+
+;==================================
+ChangeBulletRect	PROC	bullet:PTR Bullet,rect:PTR	CollisionRect
+	mov		esi,bullet
+	mov		eax,rect
+
+	mov		ebx,[eax].CollisionRect.position.pos_x
+	mov		[esi].Bullet.range.position.pos_x,ebx
+
+	mov		ebx,[eax].CollisionRect.position.pos_y
+	mov		[esi].Bullet.range.position.pos_y,ebx
+
+	mov		ebx,[eax].CollisionRect.r_width
+	mov		[esi].Bullet.range.r_width,ebx
+
+	mov		ebx,[eax].CollisionRect.r_length
+	mov		[esi].Bullet.range.r_length,ebx
+
+	ret
+ChangeBulletRect	ENDP
+;================================
+
+;==================================
+ChangeHeroRect	PROC	hero:PTR Hero,rect:PTR	CollisionRect
+	mov		esi,hero
+	mov		eax,rect
+
+	mov		ebx,[eax].CollisionRect.position.pos_x
+	mov		[esi].Hero.range.position.pos_x,ebx
+
+	mov		ebx,[eax].CollisionRect.position.pos_y
+	mov		[esi].Hero.range.position.pos_y,ebx
+
+	mov		ebx,[eax].CollisionRect.r_width
+	mov		[esi].Hero.range.r_width,ebx
+
+	mov		ebx,[eax].CollisionRect.r_length
+	mov		[esi].Hero.range.r_length,ebx
+
+	ret
+ChangeHeroRect	ENDP
+;================================
 
 
 END
