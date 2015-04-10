@@ -82,7 +82,7 @@ CmdShow:DWORD
 
 	 invoke CreateWindowEx, 0, addr ClassName, addr AppName, 
 		WS_VISIBLE or  WS_DLGFRAME, CW_USEDEFAULT, 
-		CW_USEDEFAULT, 500, 400, NULL,
+		CW_USEDEFAULT, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE * 10, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE , NULL,
 		NULL, hInst, NULL
 	 mov hwnd, eax 
 
@@ -96,44 +96,7 @@ CmdShow:DWORD
 	 mov eax, msg.wParam
 	 ret
  WinMain endp 
-  LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
-	LOCAL fileName [32] :BYTE
-	LOCAL fileNameBuffer [32] :BYTE
-	LOCAL hImage: DWORD
-	mov ecx, 0
-	@@:
-	    push ecx
-		mov fileName, 0
-		invoke  StrConcat, addr fileName, basicFileName
-		mov esi, eax
-		movzx eax, cl
-		add al, '1'
-		mov fileName[esi*TYPE fileName], al
-		inc esi
-		mov fileName[esi*TYPE fileName], '.'
-		inc esi
-		mov fileName[esi*TYPE fileName], 0
-
-		invoke StrConcat, addr fileName, imageTypeName
-		invoke	UnicodeStr,ADDR	 fileName, ADDR fileNameBuffer
-		invoke GdipLoadImageFromFile, addr fileNameBuffer,	addr hImage
-		mov eax, hImage
-		pop ecx
-		mov esi, seriesHandle
-		add esi, ecx
-		add esi, ecx
-		add esi, ecx
-		add esi, ecx
-		mov DWORD PTR [esi], eax
-		inc ecx
-	cmp cl, number
-	jne @b
-	ret
- LoadImageSeries ENDP
- SoundProc PROC
-	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
-	ret
- SoundProc ENDP
+  
 
  RunProc PROC hWnd:HWND
 	Local jumpHeight: DWORD
@@ -171,7 +134,7 @@ CmdShow:DWORD
 		.if contraPosx > 150
 			.if contraMoveDx > 0
 				mov eax, contraMoveDx
-				add backgroundBackoff, eax
+				sub backgroundOffset, eax
 				mov contraMoveDx, 0	
 			.endif
 		.endif
@@ -219,7 +182,7 @@ CmdShow:DWORD
 				sub contraPosy, CONTRA_HEIGHT
 			.endif
 		.endif
-		.if contraPosy > 300            ;vertical check  --- Water
+		.if contraPosy > 360            ;vertical check  --- Water
 			mov contraJump, 0
 			mov jumpHeight, 0	
 			mov contraMoveDy, 0
@@ -242,7 +205,7 @@ CmdShow:DWORD
 		
 		mov startupinput.GdiplusVersion, 1 
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
-
+		
 		invoke LoadImageSeries, ADDR playerMoveRightFile, 7, addr hPlayerMoveRightImage, ADDR IMAGETYPE_PNG
 		
 		invoke UnicodeStr, ADDR playerSwimRightFile, ADDR buffer
@@ -262,22 +225,16 @@ CmdShow:DWORD
 		invoke CreateThread, 0, 0, RunProc, hWnd,0, ADDR dwThreadID
 		mov hRunThread, eax
    .elseif uMsg == WM_PAINT 
-		
-		;invoke GdipCreateFromHWND, hWnd, addr hGraphics 
-		
-		;invoke GdipGetPageScale, hGraphics, addr PAGE_SCALE
-
-		;invoke GdipDeleteGraphics, hGraphics
-		;invoke GdipReleaseDC, h,hdc
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
 		invoke CreateCompatibleDC, hdc
 		mov hMemDC, eax
 		invoke GdipCreateFromHDC, hdc, addr hGraphics 
-		mov eax, 0
-		sub eax, backgroundBackoff  
-		invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0,620, 300
-		invoke GdipDrawImageI, hGraphics, hPlayerImage,contraPosx,contraPosy
+		invoke GdipSetPageUnit, hGraphics, UnitPixel
+		 
+		invoke PaintBackground, hGraphics
+		invoke PaintObjects, hGraphics
+
 		invoke GdipDeleteGraphics, hGraphics
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
@@ -361,4 +318,61 @@ UnicodeStr	ENDP
 	INVOKE StrLen, [target]
 	ret
 StrConcat ENDP
+LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
+	LOCAL fileName [32] :BYTE
+	LOCAL fileNameBuffer [32] :BYTE
+	LOCAL hImage: DWORD
+	mov ecx, 0
+	@@:
+	    push ecx
+		mov fileName, 0
+		invoke  StrConcat, addr fileName, basicFileName
+		mov esi, eax
+		movzx eax, cl
+		add al, '1'
+		mov fileName[esi*TYPE fileName], al
+		inc esi
+		mov fileName[esi*TYPE fileName], '.'
+		inc esi
+		mov fileName[esi*TYPE fileName], 0
+
+		invoke StrConcat, addr fileName, imageTypeName
+		invoke	UnicodeStr,ADDR	 fileName, ADDR fileNameBuffer
+		invoke GdipLoadImageFromFile, addr fileNameBuffer,	addr hImage
+		mov eax, hImage
+		pop ecx
+		mov esi, seriesHandle
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		mov DWORD PTR [esi], eax
+		inc ecx
+	cmp cl, number
+	jne @b
+	ret
+ LoadImageSeries ENDP
+ SoundProc PROC
+	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
+	ret
+ SoundProc ENDP
+ PaintObjects PROC, hGraphics:DWORD
+	invoke GdipDrawImageRectI, hGraphics, hPlayerImage,contraPosx,contraPosy,PLAYERIMAGE_WIDTH * DISPLAY_SCALE,PLAYERIMAGE_HEIGHT * DISPLAY_SCALE
+	ret
+ PaintObjects ENDP
+
+ PaintBackground PROC, hGraphics:DWORD
+	   
+	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, backgroundOffset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	mov eax, backgroundOffset
+	add eax, 64
+	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE  
+	mov eax, backgroundOffset
+	add eax, 128
+	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	mov eax, backgroundOffset
+	add eax, 192
+	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	ret
+ PaintBackground ENDP
 end start 

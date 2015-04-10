@@ -8,3 +8,7 @@ Debug/
 *.vcxproj
 *.aps
 *.filters
+contra.opensdf
+*.sdf
+contra.v11.suo
+*.vcxproj

@@ -3,13 +3,27 @@ IFNDEF CONTRA_INC
 
 
 WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD 
+SoundProc   PROTO
+
 UnicodeStr	PROTO :DWORD,:DWORD
 StrConcat	PROTO :PTR BYTE,:PTR BYTE
+LoadImageSeries PROTO : DWORD, : BYTE,  : DWORD,  : DWORD
 
-DIRECTION_LEFT EQU 270
-DIRECTION_RIGHT EQU 90
+PaintBackground PROTO :DWORD
+PaintObjects PROTO :DWORD
+
+BACKGROUNDIMAGE_HEIGHT EQU 256
+BACKGROUNDIMAGE_UNITWIDTH EQU 32
+PLAYERIMAGE_HEIGHT EQU 40
+PLAYERIMAGE_WIDTH EQU 50
+DISPLAY_SCALE EQU 2
+
+
 DIRECTION_UP EQU 0
+DIRECTION_RIGHT EQU 90
 DIRECTION_DOWN EQU 180
+DIRECTION_LEFT EQU 270
+
 
 
 ;=================================
@@ -102,9 +116,9 @@ Bridge	ENDS
  playerMoveRightFile db "Res\\player\\player_right",0
  IMAGETYPE_BMP db "bmp", 0  
  IMAGETYPE_PNG db "png", 0
- wallBGFile db "Res\\map\\map_wall1.bmp",0
- playerSwimShootRightFile db "Res\\player\\player_water_right1.bmp", 0
- playerSwimRightFile db "Res\\player\\player_water_right2.bmp", 0
+ wallBGFile db "Res\\map\\map_sample.png",0
+ playerSwimShootRightFile db "Res\\player\\player_water_right1.png", 0
+ playerSwimRightFile db "Res\\player\\player_water_right2.png", 0
 
 ;============================== Window Params =========
  ClassName db "WinClass", 0
@@ -114,7 +128,7 @@ PAGE_SCALE REAL4 0.1
  
 ;=============================== Game params ===========
  contraPosx SDWORD 0
- contraPosy SDWORD 200
+ contraPosy SDWORD 128
  contraMoveDx SDWORD 0
  contraMoveDy SDWORD 0 
  contraShootDx SBYTE 0
@@ -125,7 +139,7 @@ PAGE_SCALE REAL4 0.1
  contraMoveLeft BYTE 0
  contraShoot BYTE 0
  contraSwim BYTE 0
- backgroundBackoff DWORD 0
+ backgroundOffset SDWORD 0
  contra Hero <0,0,0,0,0,<0>,0,<0,0>,<0,0,<0,0>>>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
