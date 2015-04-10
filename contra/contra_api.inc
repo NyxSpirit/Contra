@@ -92,7 +92,7 @@ Bridge	ENDS
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 InitMap			PROTO
 ResetStat		PROTO
-Action			PROTO	:PTR Hero,:DWORD
+TakeAction			PROTO	:PTR Hero,:DWORD
 ChangeHeroDirection	PROTO :PTR Hero,:DWORD
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
 SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon

@@ -6,6 +6,10 @@ WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD
 UnicodeStr	PROTO :DWORD,:DWORD
 StrConcat	PROTO :PTR BYTE,:PTR BYTE
 
+DIRECTION_LEFT EQU 270
+DIRECTION_RIGHT EQU 90
+DIRECTION_UP EQU 0
+DIRECTION_DOWN EQU 180
 
 
 ;=================================
@@ -97,7 +101,7 @@ Bridge	ENDS
 ;============================== resources declarment=============\
  playerMoveRightFile db "Res\\player\\player_right",0
  IMAGETYPE_BMP db "bmp", 0  
- IMAGeTYPE_PNG db "png", 0
+ IMAGETYPE_PNG db "png", 0
  wallBGFile db "Res\\map\\map_wall1.bmp",0
  playerSwimShootRightFile db "Res\\player\\player_water_right1.bmp", 0
  playerSwimRightFile db "Res\\player\\player_water_right2.bmp", 0
@@ -121,7 +125,8 @@ PAGE_SCALE REAL4 0.1
  contraMoveLeft BYTE 0
  contraShoot BYTE 0
  contraSwim BYTE 0
-
+ backgroundBackoff DWORD 0
+ contra Hero <0,0,0,0,0,<0>,0,<0,0>,<0,0,<0,0>>>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
 
@@ -141,4 +146,5 @@ PAGE_SCALE REAL4 0.1
  token DWORD ?
  startupinput GdiplusStartupInput<?>
 
+ 
  ENDIF

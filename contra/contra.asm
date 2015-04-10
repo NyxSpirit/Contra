@@ -35,7 +35,7 @@ CONTRA_HEIGHT EQU 25
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 InitMap			PROTO
 ResetStat		PROTO
-Action			PROTO	:PTR Hero,:DWORD
+TakeAction			PROTO	:PTR Hero,:DWORD
 ChangeHeroDirection	PROTO :PTR Hero,:DWORD
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
 SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
@@ -47,6 +47,8 @@ ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
 ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
 rect1	CollisionRect	<10,20,<1,2>>
 rect2	CollisionRect	<50,50,<2,2>>
+
+
 .code
 
 start:
@@ -68,7 +70,7 @@ CmdShow:DWORD
 	 mov wc.cbWndExtra, NULL
 	 push hInstance
 	 pop wc.hInstance
-	 mov wc.hbrBackground, 1
+	 mov wc.hbrBackground, NULL
 	 mov wc.lpszMenuName, NULL
 	 mov wc.lpszClassName, offset ClassName
 	 invoke LoadIcon, NULL, IDI_APPLICATION
@@ -77,7 +79,6 @@ CmdShow:DWORD
 	 invoke LoadCursor, NULL, IDC_ARROW
 	 mov wc.hCursor, eax
 	 invoke RegisterClassEx, addr wc 
-	 invoke CollisionJudge, ADDR rect1, ADDR rect2
 
 	 invoke CreateWindowEx, 0, addr ClassName, addr AppName, 
 		WS_VISIBLE or  WS_DLGFRAME, CW_USEDEFAULT, 
@@ -95,7 +96,40 @@ CmdShow:DWORD
 	 mov eax, msg.wParam
 	 ret
  WinMain endp 
- 
+  LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
+	LOCAL fileName [32] :BYTE
+	LOCAL fileNameBuffer [32] :BYTE
+	LOCAL hImage: DWORD
+	mov ecx, 0
+	@@:
+	    push ecx
+		mov fileName, 0
+		invoke  StrConcat, addr fileName, basicFileName
+		mov esi, eax
+		movzx eax, cl
+		add al, '1'
+		mov fileName[esi*TYPE fileName], al
+		inc esi
+		mov fileName[esi*TYPE fileName], '.'
+		inc esi
+		mov fileName[esi*TYPE fileName], 0
+
+		invoke StrConcat, addr fileName, imageTypeName
+		invoke	UnicodeStr,ADDR	 fileName, ADDR fileNameBuffer
+		invoke GdipLoadImageFromFile, addr fileNameBuffer,	addr hImage
+		mov eax, hImage
+		pop ecx
+		mov esi, seriesHandle
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		add esi, ecx
+		mov DWORD PTR [esi], eax
+		inc ecx
+	cmp cl, number
+	jne @b
+	ret
+ LoadImageSeries ENDP
  SoundProc PROC
 	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
 	ret
@@ -133,7 +167,14 @@ CmdShow:DWORD
 		.else
 			mov contraMoveDx, 0
 		.endif
-
+		
+		.if contraPosx > 150
+			.if contraMoveDx > 0
+				mov eax, contraMoveDx
+				add backgroundBackoff, eax
+				mov contraMoveDx, 0	
+			.endif
+		.endif
 		mov eax, contraMoveDx
 		add contraPosx, eax
 		mov rect.left, eax
@@ -168,6 +209,7 @@ CmdShow:DWORD
 		invoke InvalidateRect, hWnd, NULL, 1
 		;invoke UpdateWindow, hWnd
 		; ================  collision check
+		
 		.if contraSwim == 1
 			.if contraPosx > 400			;Horizon check   --- water 2 ground
 				mov contraSwim, 0
@@ -189,48 +231,6 @@ CmdShow:DWORD
 	ret
  RunProc ENDP
 
- LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
-	LOCAL fileName [32] :BYTE
-	LOCAL fileNameBuffer [32] :BYTE
-	LOCAL hImage: DWORD
-	mov ecx, 0
-	@@:
-	    push ecx
-		mov fileName, 0
-		invoke  StrConcat, addr fileName, basicFileName
-		mov esi, eax
-		movzx eax, cl
-		add al, '1'
-		mov fileName[esi*TYPE fileName], al
-		inc esi
-		mov fileName[esi*TYPE fileName], '.'
-		inc esi
-		mov fileName[esi*TYPE fileName], 0
-
-		invoke StrConcat, addr fileName, imageTypeName
-		invoke	UnicodeStr,ADDR	 fileName, ADDR fileNameBuffer
-		invoke GdipLoadImageFromFile, addr fileNameBuffer,	addr hImage
-		mov eax, hImage
-		pop ecx
-		mov esi, seriesHandle
-		add esi, ecx
-		add esi, ecx
-		add esi, ecx
-		add esi, ecx
-		mov DWORD PTR [esi], eax
-		inc ecx
-	cmp cl, number
-	jne @b
-	ret
- LoadImageSeries ENDP
- 
- LoadImageResources PROC
-	
-
-	ret
- LoadImageResources ENDP
-
-
  WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
    LOCAL ps:PAINTSTRUCT 
    LOCAL hdc:HDC 
@@ -243,18 +243,18 @@ CmdShow:DWORD
 		mov startupinput.GdiplusVersion, 1 
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 
-		call LoadImageResources
-		invoke LoadImageSeries, ADDR playerMoveRightFile, 7, addr hPlayerMoveRightImage, ADDR IMAGETYPE_BMP
+		invoke LoadImageSeries, ADDR playerMoveRightFile, 7, addr hPlayerMoveRightImage, ADDR IMAGETYPE_PNG
 		
 		invoke UnicodeStr, ADDR playerSwimRightFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimRightImage
-
+		
 		mov eax, hPlayerMoveRightImage;
 		mov hPlayerImage, eax
-
+		
 		invoke UnicodeStr, ADDR wallBGFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hWallBGImage
-
+		
+		;invoke SetBKColor, hWnd, black
 
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
@@ -262,16 +262,27 @@ CmdShow:DWORD
 		invoke CreateThread, 0, 0, RunProc, hWnd,0, ADDR dwThreadID
 		mov hRunThread, eax
    .elseif uMsg == WM_PAINT 
-
-		invoke GdipCreateFromHWND, hWnd, addr hGraphics 
+		
+		;invoke GdipCreateFromHWND, hWnd, addr hGraphics 
 		
 		;invoke GdipGetPageScale, hGraphics, addr PAGE_SCALE
 
+		;invoke GdipDeleteGraphics, hGraphics
+		;invoke GdipReleaseDC, h,hdc
+		invoke BeginPaint,hWnd,addr ps 
+		mov hdc, eax
+		invoke CreateCompatibleDC, hdc
+		mov hMemDC, eax
+		invoke GdipCreateFromHDC, hdc, addr hGraphics 
+		mov eax, 0
+		sub eax, backgroundBackoff  
+		invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0,620, 300
 		invoke GdipDrawImageI, hGraphics, hPlayerImage,contraPosx,contraPosy
-		invoke GdipDrawImageI, hGraphics, hWallBGImage, 420, 300 
-
 		invoke GdipDeleteGraphics, hGraphics
-		 
+		invoke DeleteDC, hMemDC
+		invoke EndPaint,hWnd,addr ps
+	.elseif uMsg == WM_ERASEBKGND
+		
 	.elseif uMsg == WM_KEYDOWN 
 		invoke GetKeyboardState, addr keyState 
 		.if keyState[VK_D] >= 128

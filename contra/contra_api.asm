@@ -118,7 +118,7 @@ ResetStat ENDP
 
 ;=================================
 ;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-Action		PROC	hero:PTR Hero,command:DWORD
+TakeAction		PROC	hero:PTR Hero,command:DWORD
 	mov		esi,hero
 	;cmd shoot
 	.if		command == 5
@@ -160,7 +160,7 @@ Action		PROC	hero:PTR Hero,command:DWORD
 			mov		[esi].Hero.action,1
 	.endif
 	ret
-Action ENDP
+TakeAction ENDP
 ;==================================
 
 ;==================================

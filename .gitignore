@@ -1,7 +1,10 @@
 *.tlog
 *.suo
-*.suo
 *.log
-contra/Debug/contra.lastbuildstate
-contra/Debug/contra.res
-contra/Debug/main.obj
+contra/Debug/
+*.sdf
+*.sln
+Debug/
+*.vcxproj
+*.aps
+*.filters
