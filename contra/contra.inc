@@ -27,6 +27,15 @@ DIRECTION_LEFT EQU 270
 
 
 ;=================================
+;Hero,Tower,Bullet,Ground,Bridge
+Object	STRUCT
+	position	Position	<>
+	ALIGN	CollisionRect
+	collision_rect	CollisionRect	<>
+Object	ENDS
+;=================================
+
+;=================================
 Position STRUCT
 	pos_x	DWORD	0;
 	pos_y	DWORD	0;
@@ -51,6 +60,9 @@ Weapon	ENDS
 
 ;=================================
 Hero STRUCT
+	position	Position	<>
+	ALIGN		CollisionRect
+	range		CollisionRect	<>
 	;enemy:2,3,red_hero:1,bluehero:0
 	identity	BYTE	0
 	;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
@@ -62,52 +74,51 @@ Hero STRUCT
 	weapon		Weapon	<>
 	ALIGN		DWORD
 	direction	DWORD	0
-	ALIGN		Position
-	position	Position	<>
-	range		CollisionRect	<>
+	
 Hero ENDS
 ;=================================
 
 ;=================================
 Bullet	STRUCT
+	position	Position	<>
+	ALIGN		CollisionRect
+	range		CollisionRect	<>
 	;bullet alliance 0:hero 1:enemy
 	alliance	BYTE	0
 	speed		BYTE	1
-	ALIGN		Position
-	position	Position	<>
-	direction	Position	<>
-	range		CollisionRect	<>
+	ALIGN		Position	
+	direction	DWORD	0
 Bullet	ENDS
 ;=================================
 
 ;=================================
 Ground	STRUCT
 	position	Position	<>
+	ALIGN		CollisionRect
 	range	CollisionRect	<>
 Ground	ENDS
 ;=================================
 
 ;=================================
 Tower	STRUCT
+	position	Position	<>
+	ALIGN		CollisionRect
+	range CollisionRect	<>
 	;tower type 0,1,2
 	t_type	DWORD	0	
 	shoot	DWORD	0
 	life	DWORD	0
 	ALIGN	DWORD
 	direction	DWORD	0
-	ALIGN		Position
-	position	Position	<>
-	range CollisionRect	<>
 Tower	ENDS
 ;=================================
 
 ;=================================
 Bridge	STRUCT
-	bomb	BYTE	0
-	ALIGN	Position
 	position	Position	<>
+	ALIGN	CollisionRect
 	range	CollisionRect	<>
-	
+	bomb	BYTE	0	
 Bridge	ENDS
 ;=================================
 
