@@ -24,10 +24,6 @@ DIRECTION_RIGHT EQU 90
 DIRECTION_DOWN EQU 180
 DIRECTION_LEFT EQU 270
 
-BACKGROUNDHEIGHT	EQU	16
-BACKGROUNDWIDTH		EQU	20
-BACKGROUNDTOTLEWIDTH		EQU	200
-
 ;=================================
 Position STRUCT
 	pos_x	SDWORD	0;
@@ -66,23 +62,19 @@ Hero STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range		CollisionRect	<>
-	hImage		DWORD     0
-		;enemy:2,3,red_hero:1,bluehero:0
+	hImage	DWORD     0
+	;enemy:2,3,red_hero:1,bluehero:0
 	identity	BYTE	0
-		;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-		;action		BYTE	0
-		;0:FALSE,1:TRUE
+	;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
+	action		BYTE	0
+	;0:FALSE,1:TRUE
 	shoot		DWORD	0
 	swim		DWORD	0
-	jump		DWORD	0
-	fall		DWORD	0
-	crawl		DWORD	0
 	life		DWORD	0
 	weapon		Weapon	<>
-	shootdirection	DWORD	0
-	movedirection	DWORD	0
-	move_dx		SDWORD 0
-	move_dy		SDWORD 0 
+	ALIGN		DWORD
+	direction	DWORD	0
+	
 Hero ENDS
 ;=================================
 
@@ -134,15 +126,6 @@ Bridge	STRUCT
 Bridge	ENDS
 ;=================================
 
-;=================================
-BackGround	STRUCT
-	b_totle_width	DWORD	BACKGROUNDTOTLEWIDTH
-	b_width		DWORD	BACKGROUNDWIDTH
-	b_height	DWORD	BACKGROUNDHEIGHT
-	b_array		DWORD	BACKGROUNDTOTLEWIDTH * BACKGROUNDHEIGHT DUP(0)
-BackGround	ENDS
-;=================================
-
 .data
 ;============================== resources declarment=============\
  playerMoveRightFile db "Res\\player\\player_right",0
@@ -159,8 +142,18 @@ BackGround	ENDS
 PAGE_SCALE REAL4 0.1
  
 ;=============================== Game params ===========
+ contraMoveDx SDWORD 0
+ contraMoveDy SDWORD 0 
+ contraShootDx SBYTE 0
+ contraShootDy SBYTE 0
+ contraJump BYTE 0
+ contraCrawl BYTE 0
+ contraMoveRight BYTE 0
+ contraMoveLeft BYTE 0
+ contraShoot BYTE 0
+ contraSwim BYTE 0
  backgroundOffset SDWORD 0
- contra Hero <<0,128>,<0,0,<0,0>>,0,0,0,0,0,0,<0>,0>
+ contra Hero <<0,128>,<0,0,<0,0>>,0,0,0,0,0,<0>,0>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
 
