@@ -131,7 +131,7 @@ CmdShow:DWORD
 			mov contraMoveDx, 0
 		.endif
 		
-		.if contraPosx > 150
+		.if contra.position.pos_x > 200
 			.if contraMoveDx > 0
 				mov eax, contraMoveDx
 				sub backgroundOffset, eax
@@ -139,11 +139,11 @@ CmdShow:DWORD
 			.endif
 		.endif
 		mov eax, contraMoveDx
-		add contraPosx, eax
+		add contra.position.pos_x, eax
 		mov rect.left, eax
 		mov rect.right, eax
 		mov eax, contraMoveDy
-		add contraPosy, eax
+		add contra.position.pos_y, eax
 		mov rect.top, eax
 		mov rect.bottom, eax
 		.if contraMoveRight == 1
@@ -174,15 +174,15 @@ CmdShow:DWORD
 		; ================  collision check
 		
 		.if contraSwim == 1
-			.if contraPosx > 400			;Horizon check   --- water 2 ground
+			.if contra.position.pos_x > 400			;Horizon check   --- water 2 ground
 				mov contraSwim, 0
 				mov contraJump, 0
 				mov jumpHeight, 0	
 				mov contraMoveDy, 0
-				sub contraPosy, CONTRA_HEIGHT
+				sub contra.position.pos_y, CONTRA_HEIGHT
 			.endif
 		.endif
-		.if contraPosy > 360            ;vertical check  --- Water
+		.if contra.position.pos_y > 360            ;vertical check  --- Water
 			mov contraJump, 0
 			mov jumpHeight, 0	
 			mov contraMoveDy, 0
@@ -357,7 +357,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  SoundProc ENDP
  PaintObjects PROC, hGraphics:DWORD
-	invoke GdipDrawImageRectI, hGraphics, hPlayerImage,contraPosx,contraPosy,PLAYERIMAGE_WIDTH * DISPLAY_SCALE,PLAYERIMAGE_HEIGHT * DISPLAY_SCALE
+	invoke GdipDrawImageRectI, hGraphics, hPlayerImage,contra.position.pos_x,contra.position.pos_y,PLAYERIMAGE_WIDTH * DISPLAY_SCALE,PLAYERIMAGE_HEIGHT * DISPLAY_SCALE
 	ret
  PaintObjects ENDP
 

@@ -4,18 +4,9 @@ IFNDEF CONTRA_API_INC
 ;hero,background objects,foreground objects
 
 ;=================================
-;Hero,Tower,Bullet,Ground,Bridge
-Object	STRUCT
-	position	Position	<>
-	ALIGN	CollisionRect
-	collision_rect	CollisionRect	<>
-Object	ENDS
-;=================================
-
-;=================================
 Position STRUCT
-	pos_x	DWORD	0;
-	pos_y	DWORD	0;
+	pos_x	SDWORD	0;
+	pos_y	SDWORD	0;
 Position ENDS
 ;=================================
 
@@ -29,6 +20,16 @@ CollisionRect	ENDS
 ;=================================	
 
 ;=================================
+;Hero,Tower,Bullet,Ground,Bridge
+Object	STRUCT
+	position	Position	<>
+	ALIGN	CollisionRect
+	collision_rect	CollisionRect	<>
+	hImage	DWORD     0
+Object	ENDS
+;=================================
+
+;=================================
 Weapon	STRUCT
 	;weapon type	B,M,L,R,S,F,
 	w_type	DWORD	R;
@@ -40,6 +41,7 @@ Hero STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range		CollisionRect	<>
+	hImage	DWORD     0
 	;enemy:2,3,red_hero:1,bluehero:0
 	identity	BYTE	0
 	;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
@@ -60,6 +62,7 @@ Bullet	STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range		CollisionRect	<>
+	hImage		DWORD     0
 	;bullet alliance 0:hero 1:enemy
 	alliance	BYTE	0
 	speed		BYTE	1
@@ -73,6 +76,7 @@ Ground	STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range	CollisionRect	<>
+	hImage	DWORD     0
 Ground	ENDS
 ;=================================
 
@@ -80,7 +84,8 @@ Ground	ENDS
 Tower	STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
-	range CollisionRect	<>
+	range	CollisionRect	<>
+	hImage	DWORD     0
 	;tower type 0,1,2
 	t_type	DWORD	0	
 	shoot	DWORD	0
@@ -95,6 +100,7 @@ Bridge	STRUCT
 	position	Position	<>
 	ALIGN	CollisionRect
 	range	CollisionRect	<>
+	hImage	DWORD     0
 	bomb	BYTE	0	
 Bridge	ENDS
 ;=================================
