@@ -2,6 +2,9 @@ IFNDEF CONTRA_API_INC
 .data
 ;data structure
 ;hero,background objects,foreground objects
+BACKGROUNDHEIGHT	EQU	16
+BACKGROUNDWIDTH		EQU	20
+BACKGROUNDTOTALWIDTH		EQU	200
 
 ;=================================
 Position STRUCT
@@ -31,8 +34,8 @@ Object	ENDS
 
 ;=================================
 Weapon	STRUCT
-	;weapon type	B,M,L,R,S,F,
-	w_type	DWORD	R;
+	;weapon type	0:B,1:M,2:L,3:R,4:S,5:F,
+	w_type	DWORD	0;
 Weapon	ENDS
 ;=================================
 
@@ -41,19 +44,23 @@ Hero STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range		CollisionRect	<>
-	hImage	DWORD     0
-	;enemy:2,3,red_hero:1,bluehero:0
+	hImage		DWORD     0
+		;enemy:2,3,red_hero:1,bluehero:0
 	identity	BYTE	0
-	;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-	action		BYTE	0
-	;0:FALSE,1:TRUE
+		;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
+		;action		BYTE	0
+		;0:FALSE,1:TRUE
 	shoot		DWORD	0
 	swim		DWORD	0
+	jump		DWORD	0
+	fall		DWORD	0
+	crawl		DWORD	0
 	life		DWORD	0
 	weapon		Weapon	<>
-	ALIGN		DWORD
-	direction	DWORD	0
-	
+	shootdirection	DWORD	0
+	movedirection	DWORD	0
+	move_dx		SDWORD 0
+	move_dy		SDWORD 0 
 Hero ENDS
 ;=================================
 
@@ -105,6 +112,15 @@ Bridge	STRUCT
 Bridge	ENDS
 ;=================================
 
+;=================================
+BackGround	STRUCT
+	;0:none,1:grass,...
+	b_total_width	DWORD	BACKGROUNDTOTALWIDTH
+	b_width		DWORD	BACKGROUNDWIDTH
+	b_height	DWORD	BACKGROUNDHEIGHT
+	b_array		DWORD	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(0)
+BackGround	ENDS
+;=================================
 .code
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 InitMap			PROTO
