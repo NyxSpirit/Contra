@@ -1,5 +1,5 @@
 IFNDEF CONTRA_INC
-
+include contra_api.inc
 
 
 WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD 
@@ -11,6 +11,7 @@ LoadImageSeries PROTO : DWORD, : BYTE,  : DWORD,  : DWORD
 
 PaintBackground PROTO :DWORD
 PaintObjects PROTO :DWORD
+PaintObject PROTO :DWORD, :DWORD
 
 BACKGROUNDIMAGE_HEIGHT EQU 256
 BACKGROUNDIMAGE_UNITWIDTH EQU 32
@@ -18,113 +19,9 @@ PLAYERIMAGE_HEIGHT EQU 40
 PLAYERIMAGE_WIDTH EQU 50
 DISPLAY_SCALE EQU 2
 
-
-DIRECTION_UP EQU 0
-DIRECTION_RIGHT EQU 90
-DIRECTION_DOWN EQU 180
-DIRECTION_LEFT EQU 270
-
-;=================================
-Position STRUCT
-	pos_x	SDWORD	0;
-	pos_y	SDWORD	0;
-Position ENDS
-;=================================
-
-;=================================
-CollisionRect	STRUCT
-	r_width		DWORD	0
-	r_length	DWORD	0
-	ALIGN		Position
-	position	Position	<>
-CollisionRect	ENDS
-;=================================	
-
-;=================================
-;Hero,Tower,Bullet,Ground,Bridge
-Object	STRUCT
-	position	Position	<>
-	ALIGN	CollisionRect
-	collision_rect	CollisionRect	<>
-	hImage	DWORD     0
-Object	ENDS
-;=================================
-
-;=================================
-Weapon	STRUCT
-	;weapon type	B,M,L,R,S,F,
-	w_type	DWORD	R;
-Weapon	ENDS
-;=================================
-
-;=================================
-Hero STRUCT
-	position	Position	<>
-	ALIGN		CollisionRect
-	range		CollisionRect	<>
-	hImage	DWORD     0
-	;enemy:2,3,red_hero:1,bluehero:0
-	identity	BYTE	0
-	;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-	action		BYTE	0
-	;0:FALSE,1:TRUE
-	shoot		DWORD	0
-	swim		DWORD	0
-	life		DWORD	0
-	weapon		Weapon	<>
-	ALIGN		DWORD
-	direction	DWORD	0
-	
-Hero ENDS
-;=================================
-
-;=================================
-Bullet	STRUCT
-	position	Position	<>
-	ALIGN		CollisionRect
-	range		CollisionRect	<>
-	hImage		DWORD     0
-	;bullet alliance 0:hero 1:enemy
-	alliance	BYTE	0
-	speed		BYTE	1
-	ALIGN		Position	
-	direction	DWORD	0
-Bullet	ENDS
-;=================================
-
-;=================================
-Ground	STRUCT
-	position	Position	<>
-	ALIGN		CollisionRect
-	range	CollisionRect	<>
-	hImage	DWORD     0
-Ground	ENDS
-;=================================
-
-;=================================
-Tower	STRUCT
-	position	Position	<>
-	ALIGN		CollisionRect
-	range	CollisionRect	<>
-	hImage	DWORD     0
-	;tower type 0,1,2
-	t_type	DWORD	0	
-	shoot	DWORD	0
-	life	DWORD	0
-	ALIGN	DWORD
-	direction	DWORD	0
-Tower	ENDS
-;=================================
-
-;=================================
-Bridge	STRUCT
-	position	Position	<>
-	ALIGN	CollisionRect
-	range	CollisionRect	<>
-	hImage	DWORD     0
-	bomb	BYTE	0	
-Bridge	ENDS
-;=================================
+BACKGROUNDHEIGHT	EQU	16
+BACKGROUNDWIDTH		EQU	20
+BACKGROUNDTOTLEWIDTH		EQU	200
 
 .data
 ;============================== resources declarment=============\
@@ -142,18 +39,8 @@ Bridge	ENDS
 PAGE_SCALE REAL4 0.1
  
 ;=============================== Game params ===========
- contraMoveDx SDWORD 0
- contraMoveDy SDWORD 0 
- contraShootDx SBYTE 0
- contraShootDy SBYTE 0
- contraJump BYTE 0
- contraCrawl BYTE 0
- contraMoveRight BYTE 0
- contraMoveLeft BYTE 0
- contraShoot BYTE 0
- contraSwim BYTE 0
  backgroundOffset SDWORD 0
- contra Hero <<0,128>,<0,0,<0,0>>,0,0,0,0,0,<0>,0>
+ contra Hero <<0,128>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
 

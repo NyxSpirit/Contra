@@ -120,44 +120,22 @@ ResetStat ENDP
 ;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
 TakeAction		PROC	hero:PTR Hero,command:DWORD
 	mov		esi,hero
-	;cmd shoot
-	.if		command == 5
-			mov	[esi].Hero.shoot,1
-	.endif
-	.if		command == 6
-			mov		[esi].Hero.shoot,0
-	.endif
-
-	;cmd die
-	.if		command == 4
-			mov		eax,[esi].Hero.life
-			sub		eax,1
-			mov		[esi].Hero.life,eax
-			mov		[esi].Hero.action,4
-	.endif
-
-	;cmd lie
-	.if		command == 3
-			mov		eax,[esi].Hero.swim
-			.if		eax == 1
-			.else
-					mov	[esi].Hero.action,3
-			.endif
-	.endif
-
-	;cmd jump
-	.if		command == 2
-			mov		eax,[esi].Hero.swim
-			.if		eax == 1
-			.else
-					mov	[esi].Hero.action,2
-			.endif
-	.endif
-
 
 	;cmd run
-	.if		command == 1
-			mov		[esi].Hero.action,1
+	.if		command == CMD_MOVERIGHT
+			mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
+			;mov contra.shootDirection, DIRECTION_RIGHT
+	.elseif command == CMD_MOVELEFT
+			mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+	.elseif command == CMD_STAND
+			mov [esi].Hero.move_dx, 0
+	.elseif command == CMD_JUMP
+			mov [esi].Hero.jump, 1
+	.elseif command == CMD_CRAWL
+			mov [esi].Hero.crawl, 1
+	.elseif command == CMD_UP
+	.elseif command == CMD_SHOOT
+			mov [esi].Hero.shoot, 1
 	.endif
 	ret
 TakeAction ENDP
@@ -168,7 +146,7 @@ TakeAction ENDP
 ChangeHeroDirection	PROC	hero:PTR Hero,direction:DWORD
 	mov		esi,hero
 	mov		eax,direction
-	mov		[esi].Hero.direction,eax
+	;mov		[esi].Hero.direction,eax
 	ret
 ChangeHeroDirection	ENDP
 ;==================================
