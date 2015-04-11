@@ -6,8 +6,16 @@ include masm32.inc
 include contra_api.inc
 
 
+.data
 
 .code
+
+CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
+	;0:air,1:water,2:ground,3:bridge
+	
+	ret
+CollisionBackgroundJudge	ENDP
+
 ;=================================
 CollisionJudge PROC Rect1:PTR CollisionRect,
 	Rect2:PTR CollisionRect
@@ -116,27 +124,97 @@ ResetStat	PROC
 
 ResetStat ENDP
 
+;===================================
+CreateHero PROC hero:PTR Hero
+	mov esi, hero
+	mov [esi].Hero.position.pos_x, 0
+	mov [esi].Hero.position.pos_y, 0
+	mov [esi].Hero.action, HEROACTION_JUMP
+	mov [esi].Hero.move_dx, 0
+	mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
+	mov [esi].Hero.invincible_time, CONTRA_INVINCIBLE_TIME
+	mov [esi].Hero.shoot, 0
+	mov [esi].Hero.face_direction, DIRECTION_RIGHT
+	mov [esi].Hero.shootdirection, DIRECTION_RIGHT
+	;mov [esi].Hero.weapon, <>
+	mov [esi].Hero.action_imageIndex, 0
+	mov [esi].Hero.jump_height, MAX_JUMP_HEIGHT
+	ret
+CreateHero ENDP
+
 ;=================================
 ;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
 TakeAction		PROC	hero:PTR Hero,command:DWORD
+	local formerAction: DWORD
 	mov		esi,hero
 
 	;cmd run
+	mov eax, [esi].Hero.action
+	mov formerAction, eax 
+
+	.if formerAction == HEROACTION_DIE
+		mov [esi].Hero.action_imageIndex, 0
+		jmp @f
+	.endif
+
 	.if		command == CMD_MOVERIGHT
-			mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
-			;mov contra.shootDirection, DIRECTION_RIGHT
+			.if formerAction == HEROACTION_DIVE
+			.else
+				mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
+				mov [esi].Hero.face_direction, DIRECTION_RIGHT
+				.if formerAction == HEROACTION_STAND || formerAction == HEROACTION_CRAWL
+					mov [esi].Hero.action, HEROACTION_RUN
+				.endif
+			.endif
 	.elseif command == CMD_MOVELEFT
-			mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+			.if formerAction == HEROACTION_DIVE
+			.else
+				mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+				mov [esi].Hero.face_direction, DIRECTION_LEFT
+				.if formerAction == HEROACTION_STAND || formerAction == HEROACTION_CRAWL
+					mov [esi].Hero.action, HEROACTION_RUN
+				.endif
+			.endif
 	.elseif command == CMD_STAND
 			mov [esi].Hero.move_dx, 0
+			.if formerAction == HEROACTION_RUN
+				mov [esi].Hero.action, HEROACTION_STAND
+			.endif
 	.elseif command == CMD_JUMP
-			mov [esi].Hero.jump, 1
-	.elseif command == CMD_CRAWL
-			mov [esi].Hero.crawl, 1
+			.if (formerAction == HEROACTION_STAND) 
+				mov [esi].Hero.action, HEROACTION_JUMP
+			.endif
+			.if (formerAction ==HEROACTION_RUN)
+				mov [esi].Hero.action, HEROACTION_JUMP
+			.endif
+			.if formerAction == HEROACTION_CRAWL
+				mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
+				mov [esi].Hero.action, HEROACTION_FALL
+			.endif
+	.elseif command == CMD_DOWN
+			.if formerAction == HEROACTION_SWIM
+				mov [esi].Hero.action, HEROACTION_DIVE
+			.elseif formerAction == HEROACTION_STAND
+				mov [esi].Hero.action, HEROACTION_CRAWL
+			.endif
 	.elseif command == CMD_UP
 	.elseif command == CMD_SHOOT
 			mov [esi].Hero.shoot, 1
+	.elseif command == CMD_CANCELSHOOT
+			mov [esi].Hero.shoot, 0
+	.elseif command == CMD_CANCELCRAWL
+			.if formerAction == HEROACTION_CRAWL
+				mov [esi].Hero.action, HEROACTION_STAND
+			.elseif formerAction == HEROACTION_DIVE
+				mov [esi].Hero.action, HEROACTION_SWIM
+			.endif
 	.endif
+
+	mov eax, formerAction
+	.if eax != [esi].Hero.action
+		mov [esi].Hero.action_imageIndex, 0
+	.endif
+@@:
 	ret
 TakeAction ENDP
 ;==================================
@@ -156,11 +234,6 @@ ChangeHeroDirection	ENDP
 ChangeHeroStat	PROC	hero:PTR Hero,stat:DWORD
 	mov		esi,hero
 	mov		eax,stat
-	.if		eax == 0
-			mov	[esi].Hero.swim,0
-	.elseif	eax == 1
-			mov	[esi].Hero.swim,1
-	.endif
 	ret
 ChangeHeroStat	ENDP
 ;==================================

@@ -1,19 +1,9 @@
 IFNDEF CONTRA_API_INC
 
-CMD_MOVERIGHT EQU 1
-CMD_MOVELEFT EQU 2
-CMD_JUMP EQU 3
-CMD_CRAWL EQU 4
-CMD_SHOOT EQU 5
-CMD_CANCELSHOOT EQU 6
-CMD_CANCELCRAWL EQU 7
-CMD_STAND EQU 8
-CMD_UP EQU 9
-
-DIRECTION_UP EQU 0
-DIRECTION_RIGHT EQU 90
-DIRECTION_DOWN EQU 180
-DIRECTION_LEFT EQU 270
+DIRECTION_UP EQU 90
+DIRECTION_RIGHT EQU 0
+DIRECTION_DOWN EQU 270
+DIRECTION_LEFT EQU 180
 
 MAX_JUMP_HEIGHT EQU 80
 CONTRA_BASIC_MOV_SPEED EQU 5
@@ -21,13 +11,33 @@ CONTRA_BASIC_JUMP_SPEED EQU 15
 CONTRA_FLOAT_HEIGHT EQU 6
 CONTRA_FLOAT_SPEED EQU 2
 CONTRA_HEIGHT EQU 25
-.data
+CONTRA_INVINCIBLE_TIME EQU 17
+
+CMD_MOVERIGHT EQU 1
+CMD_MOVELEFT EQU 2
+CMD_JUMP EQU 3
+CMD_DOWN EQU 4
+CMD_SHOOT EQU 5
+CMD_CANCELSHOOT EQU 6     
+CMD_CANCELCRAWL EQU 7
+CMD_STAND EQU 8
+CMD_UP EQU 9
+CMD_SWIM EQU 10
+
+
+BACKGROUNDHEIGHT	EQU	16
+BACKGROUNDSCREENWIDTH		EQU	4
+BACKGROUNDTOTALWIDTH		EQU	4
+
+BACKGROUNDIMAGE_HEIGHT EQU 256
+BACKGROUNDIMAGE_UNITHEIGHT EQU 16
+BACKGROUNDIMAGE_UNITWIDTH EQU 32
+PLAYERIMAGE_HEIGHT EQU 40
+PLAYERIMAGE_WIDTH EQU 50
+
+;=======================================data
 ;data structure
 ;hero,background objects,foreground objects
-BACKGROUNDHEIGHT	EQU	16
-BACKGROUNDWIDTH		EQU	20
-BACKGROUNDTOTALWIDTH		EQU	200
-
 ;=================================
 Position STRUCT
 	pos_x	SDWORD	0;
@@ -37,7 +47,7 @@ Position ENDS
 
 ;=================================
 CollisionRect	STRUCT
-	r_width		DWORD	0
+	r_width		DWORD	0 
 	r_length	DWORD	0
 	ALIGN		Position
 	position	Position	<>
@@ -62,6 +72,17 @@ Weapon	ENDS
 ;=================================
 
 ;=================================
+HEROACTION_STAND EQU 0
+HEROACTION_RUN EQU 2
+HEROACTION_JUMP EQU 3
+HEROACTION_CRAWL EQU 4
+HEROACTION_DIE EQU 5
+;HEROACTION_SHOOT EQU 6
+HEROACTION_DIVE EQU 7
+HEROACTION_FALL EQU 8
+HEROACTION_SWIM EQU 9
+
+
 Hero STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
@@ -69,20 +90,22 @@ Hero STRUCT
 	hImage		DWORD     0
 		;enemy:2,3,red_hero:1,bluehero:0
 	identity	BYTE	0
-		;action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-		;action		BYTE	0
+		;action:0:standby,1:run,2:jump,3:lie,4:die....
+	action		DWORD	0
+	action_imageIndex DWORD 0
 		;0:FALSE,1:TRUE
 	shoot		DWORD	0
-	swim		DWORD	0
-	jump		DWORD	0
-	fall		DWORD	0
-	crawl		DWORD	0
 	life		DWORD	0
+	jump_height DWORD   0
+	
+	invincible_time  DWORD   0
+
 	weapon		Weapon	<>
 	shootdirection	DWORD	0
-	movedirection	DWORD	0
+	face_direction	DWORD	0
 	move_dx		SDWORD 0
 	move_dy		SDWORD 0 
+	
 Hero ENDS
 ;=================================
 
@@ -120,7 +143,7 @@ Tower	STRUCT
 	shoot	DWORD	0
 	life	DWORD	0
 	ALIGN	DWORD
-	direction	DWORD	0
+	direction	DWORD	0r_
 Tower	ENDS
 ;=================================
 
@@ -135,15 +158,17 @@ Bridge	ENDS
 ;=================================
 
 ;=================================
+
+BGTYPE_GROUND EQU 1
+BGTYPE_WATER EQU 2
+BGTYPE_OTHERS EQU 0
+
 BackGround	STRUCT
-	;0:none,1:grass,...
-	b_total_width	DWORD	BACKGROUNDTOTALWIDTH
-	b_width		DWORD	BACKGROUNDWIDTH
-	b_height	DWORD	BACKGROUNDHEIGHT
+	b_offset SDWORD 0
 	b_array		DWORD	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(0)
 BackGround	ENDS
 ;=================================
-.code
+
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 InitMap			PROTO
 ResetStat		PROTO
@@ -157,6 +182,7 @@ TowerShoot		PROTO	:PTR Tower,:DWORD
 TowerDamage		PROTO	:PTR Tower
 ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
 ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
-
+CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
+CreateHero PROTO :PTR Hero
 
 ENDIF

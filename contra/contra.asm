@@ -23,25 +23,6 @@ includelib masm32.lib
 
 include contra.inc
 
-IDR_WAVE1 EQU 104
-
-CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
-InitMap			PROTO
-ResetStat		PROTO
-TakeAction			PROTO	:PTR Hero,:DWORD
-ChangeHeroDirection	PROTO :PTR Hero,:DWORD
-ChangeHeroStat	PROTO	:PTR Hero,:DWORD
-SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
-BridgeBomb		PROTO	:PTR Bridge
-ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
-TowerShoot		PROTO	:PTR Tower,:DWORD
-TowerDamage		PROTO	:PTR Tower
-ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
-ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
-rect1	CollisionRect	<10,20,<1,2>>
-rect2	CollisionRect	<50,50,<2,2>>
-
-
 .code
 
 start:
@@ -92,89 +73,162 @@ CmdShow:DWORD
   
 
  RunProc PROC hWnd:HWND
-	Local jumpHeight: DWORD
-	Local moveImageIndex: BYTE
 	LOCAL rect: RECT 
-	mov jumpHeight, 0
-	mov moveImageIndex, 0
 	.while TRUE
-		.if contra.swim == 1
-			.if jumpHeight < CONTRA_FLOAT_HEIGHT
+		
+		;invoke UpdateWindow, hWnd
+		; ================  collision check
+
+		;invoke JudgeContraBulletCollision
+		
+		;invoke CollisionBackgroundJudge, addr contra, addr background
+		.if contra.position.pos_y > 360
+			mov contra.action, HEROACTION_SWIM
+			mov contra.jump_height, 0	
+			mov contra.move_dy, 0
+		.endif
+
+		.if contra.action == HEROACTION_DIE
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov contra.move_dx, -CONTRA_BASIC_MOV_SPEED
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerDieRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 7
+					invoke CreateHero, addr contra 
+				.endif
+			.else
+				mov contra.move_dx, CONTRA_BASIC_MOV_SPEED
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerDieLeftImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 7
+					invoke CreateHero, addr contra 
+				.endif
+			.endif
+		.elseif contra.action == HEROACTION_SWIM
+			.if contra.jump_height < CONTRA_FLOAT_HEIGHT
 				mov contra.move_dy, -CONTRA_FLOAT_SPEED
-				add jumpHeight, CONTRA_FLOAT_SPEED
+				add contra.jump_height, CONTRA_FLOAT_SPEED
 			.else
 				mov contra.move_dy, CONTRA_FLOAT_SPEED
 			.endif
-		.else
-			.if contra.jump == 1 
-				.if jumpHeight < MAX_JUMP_HEIGHT
-					mov contra.move_dy, -CONTRA_BASIC_JUMP_SPEED
-					add jumpHeight, CONTRA_BASIC_JUMP_SPEED
-				.else
-					mov contra.move_dy, CONTRA_BASIC_JUMP_SPEED
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov eax, hPlayerSwimRightImage
+				mov contra.hImage, eax
+			.else
+				mov eax, hPlayerSwimLeftImage
+				mov contra.hImage, eax
+			.endif
+		.elseif contra.action == HEROACTION_JUMP
+			.if contra.jump_height < MAX_JUMP_HEIGHT
+				mov contra.move_dy, -CONTRA_BASIC_JUMP_SPEED
+				add contra.jump_height, CONTRA_BASIC_JUMP_SPEED
+			.else
+				mov contra.move_dy, CONTRA_BASIC_JUMP_SPEED
+			.endif
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerJumpRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 4
+					mov contra.action_imageIndex, 0
 				.endif
+			.else
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerJumpLeftImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 4
+					mov contra.action_imageIndex, 0
+				.endif
+			.endif
+		.elseif contra.action == HEROACTION_CRAWL
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov eax, hPlayerCrawlRightImage
+				mov contra.hImage, eax
+			.else
+				mov eax, hPlayerCrawlLeftImage
+				mov contra.hImage, eax
+			.endif
+		.elseif contra.action == HEROACTION_RUN
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 6
+					mov contra.action_imageIndex, 0
+				.endif
+			.else
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 6
+					mov contra.action_imageIndex, 0
+				.endif
+			.endif
+		.elseif contra.action == HEROACTION_DIVE
+			.if contra.jump_height < CONTRA_FLOAT_HEIGHT
+				mov contra.move_dy, -CONTRA_FLOAT_SPEED
+				add contra.jump_height, CONTRA_FLOAT_SPEED
+			.else
+				mov contra.move_dy, CONTRA_FLOAT_SPEED
+			.endif
+				mov eax, hPlayerDiveImage
+				mov contra.hImage, eax
+		.elseif contra.action == HEROACTION_FALL
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov eax, hPlayerFallRightImage;
+				mov contra.hImage, eax
+			.else
+				mov eax, hPlayerFallLeftImage;
+				mov contra.hImage, eax
+			.endif
+		.else
+			.if contra.face_direction == DIRECTION_RIGHT
+				mov eax, hPlayerStandRightImage;
+				mov contra.hImage, eax
+			.else
+				mov eax, hPlayerStandLeftImage;
+				mov contra.hImage, eax
 			.endif
 		.endif
 		
-		.if contra.position.pos_x > 200
+		; move view along with contra
+		.if contra.position.pos_x > 250
 			.if contra.move_dx > 0
 				mov eax, contra.move_dx
-				sub backgroundOffset, eax
+				sub background.b_offset, eax
 				mov contra.move_dx, 0	
 			.endif
 		.endif
+
+		.if contra.invincible_time > 0
+			mov eax, contra.invincible_time
+			mov bl, 2
+			div bl
+			.if ah == 0
+				mov contra.hImage, 0
+			.endif
+			dec contra.invincible_time
+		.endif
+		; update object positions
 		mov eax, contra.move_dx
 		add contra.position.pos_x, eax
 		mov eax, contra.move_dy
 		add contra.position.pos_y, eax
 
-		.if contra.move_dx > 0
-			.if contra.swim == 1
-				mov eax, hPlayerSwimRightImage
-				mov contra.hImage, eax
-			.else
-				inc moveImageIndex
-				movzx esi, moveImageIndex
-				mov eax, hPlayerMoveRightImage[esi * TYPE hPlayerMoveRightImage];
-				mov contra.hImage, eax
-				.if moveImageIndex == 6
-					mov moveImageIndex, 1
-				.endif
-			.endif
-		.else
-			.if contra.swim == 1
-				mov eax, hPlayerSwimRightImage
-				mov contra.hImage, eax
-			.else
-				mov eax, hPlayerMoveRightImage;
-				mov contra.hImage, eax
-			.endif
-		.endif
-
-		invoke InvalidateRect, hWnd, NULL, 1
-		;invoke UpdateWindow, hWnd
-		; ================  collision check
-		
-		.if contra.swim == 1
-			.if contra.position.pos_x > 400			;Horizon check   --- water 2 ground
-				mov contra.swim, 0
-				mov contra.jump, 0
-				mov jumpHeight, 0	
-				mov contra.move_dy, 0
-				sub contra.position.pos_y, CONTRA_HEIGHT
-			.endif
-		.endif
-		.if contra.position.pos_y > 360            ;vertical check  --- Water
-			mov contra.jump, 0
-			mov jumpHeight, 0	
-			mov contra.move_dy, 0
-
-			mov contra.swim, 1
-		.endif
+		invoke InvalidateRect, hWnd, NULL, 1		
 		invoke Sleep, 100
 	.endw
 	ret
  RunProc ENDP
+ 
 
  WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
    LOCAL ps:PAINTSTRUCT 
@@ -182,28 +236,51 @@ CmdShow:DWORD
    LOCAL hMemDC:HDC 
    LOCAL rect:RECT 
    LOCAL hGraphics: DWORD
-   LOCAL buffer [32] :BYTE
+   LOCAL buffer [64] :BYTE
    .if uMsg == WM_CREATE
 		
 		mov startupinput.GdiplusVersion, 1 
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 		
-		invoke LoadImageSeries, ADDR playerMoveRightFile, 7, addr hPlayerMoveRightImage, ADDR IMAGETYPE_PNG
+		; ==========invoke LoadImageResources
 		
+		invoke UnicodeStr, ADDR backgroundFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hBackgroundImage
+		
+		invoke LoadImageSeries, ADDR playerMoveRightFiles, 6, addr hPlayerMoveRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerMoveLeftFiles, 6, addr hPlayerMoveLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerJumpRightFiles, 4, addr hPlayerJumpRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerJumpLeftFiles, 4, addr hPlayerJumpLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerDieRightFiles, 7, addr hPlayerDieRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerDieLeftFiles, 7, addr hPlayerDieLeftImages, ADDR IMAGETYPE_PNG
+		
+		invoke UnicodeStr, ADDR playerStandRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerStandRightImage
+		invoke UnicodeStr, ADDR playerStandLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerStandLeftImage
 		invoke UnicodeStr, ADDR playerSwimRightFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimRightImage
-		
-		
-		invoke UnicodeStr, ADDR wallBGFile, ADDR buffer
-		invoke GdipLoadImageFromFile, addr buffer, addr hWallBGImage
-		
-		;invoke SetBKColor, hWnd, black
+		invoke UnicodeStr, ADDR playerSwimLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimLeftImage
+		invoke UnicodeStr, ADDR playerCrawlRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerCrawlRightImage
+		invoke UnicodeStr, ADDR playerCrawlLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerCrawlLeftImage
+		invoke UnicodeStr, ADDR playerFallRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerFallRightImage
+		invoke UnicodeStr, ADDR playerFallLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerFallLeftImage
+		invoke UnicodeStr, ADDR playerDiveFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerDiveImage
 
+		;invoke CreateHero, addr contra 
+		
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
 		
 		invoke CreateThread, 0, 0, RunProc, hWnd,0, ADDR dwThreadID
 		mov hRunThread, eax
+
    .elseif uMsg == WM_PAINT 
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
@@ -218,8 +295,7 @@ CmdShow:DWORD
 		invoke GdipDeleteGraphics, hGraphics
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
-	.elseif uMsg == WM_ERASEBKGND
-		
+
 	.elseif uMsg == WM_KEYDOWN 
 		invoke GetKeyboardState, addr keyState 
 		.if keyState[VK_D] >= 128
@@ -228,7 +304,7 @@ CmdShow:DWORD
 			invoke TakeAction, addr contra, CMD_MOVELEFT
 		.endif
 		.if keyState[VK_S] >= 128
-			invoke TakeAction, addr contra, CMD_CRAWL
+			invoke TakeAction, addr contra, CMD_DOWN
 		.endif
 		.if keyState[VK_K] >= 128
 			invoke TakeAction, addr contra, CMD_JUMP
@@ -236,7 +312,6 @@ CmdShow:DWORD
 		.if keyState[VK_J] >= 128
 			invoke TakeAction, addr contra, CMD_SHOOT
 		.endif
-		invoke InvalidateRect, hWnd, NULL, 1
 	.elseif uMsg == WM_KEYUP
 		.if wParam == VK_D			
 			jmp @f
@@ -247,6 +322,8 @@ CmdShow:DWORD
 				invoke TakeAction, addr contra, CMD_MOVERIGHT
 			.elseif keyState[VK_A] >= 128
 				invoke TakeAction, addr contra, CMD_MOVELEFT
+			.elseif keyState[VK_S] >= 128
+				invoke TakeAction, addr contra, CMD_DOWN
 			.else
 				invoke TakeAction, addr contra, CMD_STAND
 			.endif
@@ -255,6 +332,7 @@ CmdShow:DWORD
 		.elseif wParam == VK_S
 			invoke TakeAction, addr contra, CMD_CANCELCRAWL
 		.endif
+
 	.elseif uMsg == WM_DESTROY
 		invoke DeleteObject, hMusic
 		invoke CloseHandle,hBGMThread
@@ -300,9 +378,16 @@ UnicodeStr	ENDP
 	INVOKE StrLen, [target]
 	ret
 StrConcat ENDP
+LoadImageResources PROC
+	local buffer [64] :BYTE
+	
+
+	ret
+LoadImageResources ENDP
+
 LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, imageTypeName: DWORD
-	LOCAL fileName [32] :BYTE
-	LOCAL fileNameBuffer [32] :BYTE
+	LOCAL fileName [64] :BYTE
+	LOCAL fileNameBuffer [64] :BYTE
 	LOCAL hImage: DWORD
 	mov ecx, 0
 	@@:
@@ -361,21 +446,14 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	mul bx
 	mov imageHeight, eax
 	invoke GdipDrawImageRectI, hGraphics, (Object PTR [esi]).hImage,(Object PTR [esi]).position.pos_x,(Object PTR [esi]).position.pos_y,
-						imageWidth ,imageHeight 
+						80,100
 	ret
  PaintObject ENDP
  PaintBackground PROC, hGraphics:DWORD
 	   
-	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, backgroundOffset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
-	mov eax, backgroundOffset
-	add eax, 64
-	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE  
-	mov eax, backgroundOffset
-	add eax, 128
-	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
-	mov eax, backgroundOffset
-	add eax, 192
-	invoke GdipDrawImageRectI, hGraphics, hWallBGImage, eax ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, 6000,450
+
 	ret
  PaintBackground ENDP
 end start 
