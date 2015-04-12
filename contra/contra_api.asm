@@ -298,8 +298,77 @@ CollisionJudge ENDP
 
 
 ;=================================
-InitMap		PROC	
-	
+FillMap		PROC	background:PTR Background, h:DWORD, l:DWORD, r:DWORD, t:BYTE
+	mov  ebx, h
+	imul ebx,BACKGROUNDTOTALWIDTH
+	add  ebx, l
+	dec  ebx
+	mov  ecx, r
+	sub  ecx, l
+	inc  ecx
+	mov	 edx, background
+	lea  esi, [edx].Background.b_array[ebx]
+	mov  bl, t
+
+FillMapLoop:
+	mov [esi], bl
+	;mov al, [esi]
+	inc esi
+	loop FillMapLoop
+
+	ret
+FillMap ENDP
+
+InitMap		PROC	background:PTR Background
+	invoke FillMap, background, 12, 1, 56, BGTYPE_WATER
+	invoke FillMap, background, 6, 2, 15, BGTYPE_GROUND
+	invoke FillMap, background, 8, 6, 8, BGTYPE_GROUND
+	invoke FillMap, background, 10, 9, 9, BGTYPE_GROUND
+	invoke FillMap, background, 12, 10, 11, BGTYPE_GROUND
+	invoke FillMap, background, 10, 12, 12, BGTYPE_GROUND
+	invoke FillMap, background, 10, 14, 15, BGTYPE_GROUND
+	invoke FillMap, background, 6, 16, 30, BGTYPE_GROUND
+	invoke FillMap, background, 12, 20, 21, BGTYPE_GROUND
+	invoke FillMap, background, 9, 21, 23, BGTYPE_GROUND
+	invoke FillMap, background, 6, 25, 28, BGTYPE_BRIDGE
+	invoke FillMap, background, 6, 31, 45, BGTYPE_GROUND
+	invoke FillMap, background, 12, 45, 45, BGTYPE_GROUND
+	invoke FillMap, background, 4, 44, 45, BGTYPE_GROUND
+	invoke FillMap, background, 6, 34, 37, BGTYPE_BRIDGE
+	invoke FillMap, background, 4, 46, 60, BGTYPE_GROUND
+	invoke FillMap, background, 12, 46, 47, BGTYPE_GROUND
+	invoke FillMap, background, 9, 48, 49, BGTYPE_GROUND
+	invoke FillMap, background, 8, 51, 58, BGTYPE_GROUND
+	invoke FillMap, background, 12, 55, 60, BGTYPE_GROUND
+	invoke FillMap, background, 6, 60, 60, BGTYPE_GROUND
+	invoke FillMap, background, 6, 61, 66, BGTYPE_GROUND
+	invoke FillMap, background, 4, 66, 70, BGTYPE_GROUND
+	invoke FillMap, background, 12, 61, 61, BGTYPE_GROUND
+	invoke FillMap, background, 10, 62, 63, BGTYPE_GROUND
+	invoke FillMap, background, 10, 65, 66, BGTYPE_GROUND
+	invoke FillMap, background, 9, 68, 68, BGTYPE_GROUND
+	invoke FillMap, background, 8, 70, 72, BGTYPE_GROUND
+	invoke FillMap, background, 6, 72, 73, BGTYPE_GROUND
+	invoke FillMap, background, 8, 75, 75, BGTYPE_GROUND
+	invoke FillMap, background, 12, 75, 75, BGTYPE_GROUND
+	invoke FillMap, background, 8, 76, 76, BGTYPE_GROUND
+	invoke FillMap, background, 10, 76, 78, BGTYPE_GROUND
+	invoke FillMap, background, 6, 79, 80, BGTYPE_GROUND
+	invoke FillMap, background, 4, 80, 81, BGTYPE_GROUND
+	invoke FillMap, background, 9, 81, 81, BGTYPE_GROUND
+	invoke FillMap, background, 12, 80, 80, BGTYPE_GROUND
+	invoke FillMap, background, 6, 83, 84, BGTYPE_GROUND
+	invoke FillMap, background, 8, 84, 88, BGTYPE_GROUND
+	invoke FillMap, background, 12, 87, 89, BGTYPE_GROUND
+	invoke FillMap, background, 10, 91, 92, BGTYPE_GROUND
+	invoke FillMap, background, 8, 94, 95, BGTYPE_GROUND
+	invoke FillMap, background, 6, 96, 99, BGTYPE_GROUND
+	invoke FillMap, background, 9, 97, 99, BGTYPE_GROUND
+	invoke FillMap, background, 8, 100, 100, BGTYPE_GROUND
+	invoke FillMap, background, 10, 101, 101, BGTYPE_GROUND
+	invoke FillMap, background, 12, 96, 109, BGTYPE_GROUND
+
+	ret
 InitMap ENDP
 
 ;=================================
