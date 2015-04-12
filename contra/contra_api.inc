@@ -144,7 +144,7 @@ Tower	STRUCT
 	shoot	DWORD	0
 	life	DWORD	0
 	ALIGN	DWORD
-	direction	DWORD	0r_
+	direction	DWORD	0
 Tower	ENDS
 ;=================================
 

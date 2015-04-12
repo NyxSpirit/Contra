@@ -33,8 +33,9 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		ebx,[esi].Hero.position.pos_y
 	mov		ecx,background
 
-	.if		ebx >= 448
+	.if		[esi].Hero.position.pos_y >= 448
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
+			ret
 	.endif	
 
 	mov		edx,0
@@ -329,11 +330,10 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 	local formerAction: DWORD
 	local newAction:DWORD
 	mov		esi,hero
-	mov   newAction, 0
 	;cmd run
 	mov eax, [esi].Hero.action
 	mov formerAction, eax 
-
+	mov   newAction, eax
 	.if formerAction == HEROACTION_DIE
 		jmp @f
 	.endif
@@ -370,7 +370,7 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 			.endif
 			.if formerAction == HEROACTION_CRAWL
 				mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
-				sub [esi].Hero.position.pos_y, 20 
+				add [esi].Hero.position.pos_y, 20 
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
