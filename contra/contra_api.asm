@@ -14,7 +14,7 @@ include contra_api.inc
 CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
-			x:DWORD,y:DWORD,position:DWORD,img_width:DWORD,img_height:DWORD,speed:DWORD,jump_speed:DWORD
+			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,speed:DWORD,jump_speed:DWORD
 	;0:air,1:water,2:ground,3:bridge
 	
 	mov		esi,hero
@@ -29,18 +29,20 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		img_width,BACKGROUNDIMAGE_UNITWIDTH
 	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
 	
-	mov		eax,[esi].Hero.position.pos_x
-	mov		ebx,[esi].Hero.position.pos_y
+	mov		eax,[esi].Hero.range.position.pos_x
+	mov		ebx,[esi].Hero.range.position.pos_y
 	mov		ecx,background
 
-	.if		[esi].Hero.position.pos_y >= 448
+	.if		[esi].Hero.position.pos_y >= 300
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
+			mov	[esi].Hero.move_dx,0
+			mov	[esi].Hero.move_dy,0
 			ret
 	.endif	
 
 	mov		edx,0
 	sub		eax,[ecx].Background.b_offset
-	div		img_height
+	div		img_width
 	mov		x,eax
 
 	mov		edx,0
@@ -61,32 +63,34 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	dec		eax
 	mov		bl,[ecx].Background.b_array[eax]
 
-	mov		ecx,[esi].Hero.face_direction
 	.if		bl == BGTYPE_AIR
-			.if	ecx == DIRECTION_LEFT
+			.if	[esi].Hero.move_dx < 0
 			.endif
 	.elseif	bl == BGTYPE_WATER
-			.if	ecx == DIRECTION_LEFT
+			.if	[esi].Hero.move_dx < 0
 			.endif
 	.elseif	bl == BGTYPE_GROUND
+
 			;pos_y
 			mov		eax,img_height
 			mov		ebx, y
 			mul		ebx
 			mov	rect_left.position.pos_y,eax
+
 			;pos_x
 			mov	eax,x
 			dec	eax	;left
 			mul	img_width
 			mov	edx,background
-			sub	eax,[edx].Background.b_offset
+			add	eax,[edx].Background.b_offset
 			mov	rect_left.position.pos_x,eax
 
 			mov	eax,img_width
+			add	eax,5
 			mov	rect_left.r_width,eax
 			mov	eax,img_height
 			mov	rect_left.r_height,eax
-			.if	ecx == DIRECTION_LEFT
+			.if	[esi].Hero.move_dx < 0
 				INVOKE	CollisionJudge,addr	rect_left,addr [esi].Hero.range
 				.if eax == 1
 					mov [esi].Hero.move_dx,0
@@ -94,7 +98,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 				.endif
 			.endif
 	.elseif	ebx == BGTYPE_BRIDGE
-			.if	ecx == DIRECTION_LEFT
+			.if	[esi].Hero.move_dx < 0
 			.endif
 	.endif
 
@@ -104,12 +108,11 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	inc		eax
 	mov		bl,[ecx].Background.b_array[eax]
 
-	mov		ecx,[esi].Hero.face_direction
 	.if		bl == BGTYPE_AIR
-			.if	ecx == DIRECTION_RIGHT
+			.if	[esi].Hero.move_dx > 0
 			.endif
 	.elseif	bl == BGTYPE_WATER
-			.if	ecx == DIRECTION_RIGHT
+			.if	[esi].Hero.move_dx > 0
 			.endif
 	.elseif	bl == BGTYPE_GROUND
 			;pos_y
@@ -119,16 +122,16 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 			;pos_x
 			mov	eax,x
 			inc	eax	;right
-			mul	img_height
+			mul	img_width
 			mov	edx,background
-			sub	eax,[edx].Background.b_offset
+			add	eax,[edx].Background.b_offset
 			mov	rect_right.position.pos_x,eax
 
 			mov	eax,img_width
 			mov	rect_right.r_width,eax
 			mov	eax,img_height
 			mov	rect_right.r_height,eax
-			.if	ecx == DIRECTION_RIGHT
+			.if	[esi].Hero.move_dx > 0
 				INVOKE	CollisionJudge,addr	rect_right,addr [esi].Hero.range
 				.if eax == 1				
 					mov [esi].Hero.move_dx,0
@@ -136,7 +139,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 				.endif
 			.endif
 	.elseif	bl == BGTYPE_BRIDGE
-			.if	ecx == DIRECTION_RIGHT
+			.if	[esi].Hero.move_dx > 0
 			.endif
 	.endif
 
@@ -144,7 +147,6 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		ecx,background
 	mov		eax,position
 	mov		bl,[ecx].Background.b_array[eax]
-	mov		ecx,[esi].Hero.face_direction
 
 	;pos_y
 	mov	eax,y
@@ -152,9 +154,9 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov	rect_down.position.pos_y,eax
 	;pos_x
 	mov	eax,x
-	mul	img_height
+	mul	img_width
 	mov	edx,background
-	sub	eax,[edx].Background.b_offset
+	add	eax,[edx].Background.b_offset
 	mov	rect_down.position.pos_x,eax
 
 	mov	eax,img_width
@@ -202,7 +204,7 @@ CollisionJudge PROC USES esi ebx,
 	Rect2:PTR CollisionRect 
 
 	LOCAL	r1_width:DWORD,r1_height:DWORD,r2_width:DWORD,r2_height:DWORD,
-			r1_x:DWORD,r1_y:DWORD,r2_x:DWORD,r2_y:DWORD
+			r1_x:SDWORD,r1_y:SDWORD,r2_x:SDWORD,r2_y:SDWORD
 
 	mov		eax,0
 	mov		esi,Rect1
@@ -227,7 +229,7 @@ CollisionJudge PROC USES esi ebx,
 	
 	mov		ecx,r1_x
 	mov		edx,r2_x
-	.if		ecx < edx
+	.if		r1_x < edx
 		mov	ebx,r2_x
 		sub	ebx,r1_x
 		.if	ebx < r1_width
@@ -259,9 +261,9 @@ CollisionJudge PROC USES esi ebx,
 			ret
 		.endif
 	.else
-		mov ebx,r1_x
+		mov	ebx,r1_x
 		sub	ebx,r2_x
-		.if	ebx < r1_width
+		.if	ebx < r2_width
 			mov ecx,r1_y
 			mov	edx,r2_y
 			.if	ecx < edx
