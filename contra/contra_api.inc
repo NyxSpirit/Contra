@@ -34,7 +34,8 @@ BACKGROUNDIMAGE_UNITHEIGHT EQU 32
 BACKGROUNDIMAGE_UNITWIDTH EQU 64
 PLAYERIMAGE_HEIGHT EQU 40
 PLAYERIMAGE_WIDTH EQU 50
-
+SCREEN_HEIGHT EQU 487
+SCREEN_WIDTH EQU 520
 ;=======================================data
 ;data structure
 ;hero,background objects,foreground objects
@@ -166,7 +167,7 @@ BGTYPE_BRIDGE EQU 3
 
 Background	STRUCT
 	b_offset SDWORD 0
-	b_array		DWORD	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(1)
+	b_array		BYTE 	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(1)
 Background	ENDS
 ;=================================
 
@@ -188,4 +189,5 @@ CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
 CreateHero PROTO :PTR Hero
 UpdateHeroCollisionRect PROTO :PTR Hero
 UpdateHeroPosition PROTO :PTR Hero
+UpdateHeroAction PROTO :PTR Hero, :DWORD
 ENDIF

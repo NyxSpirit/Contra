@@ -1,7 +1,6 @@
 IFNDEF CONTRA_INC
 include contra_api.inc
 
-
 WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD 
 SoundProc   PROTO
 
@@ -12,6 +11,8 @@ LoadImageResources PROTO
 PaintBackground PROTO :DWORD
 PaintObjects PROTO :DWORD
 PaintObject PROTO :DWORD, :DWORD
+
+ContraTakeAction PROTO
 
 
 DISPLAY_SCALE EQU 2
@@ -49,7 +50,7 @@ IDR_WAVE1 EQU 104
 ;PAGE_SCALE REAL4 0.1
 ;=============================== Game params ===========
  contra Hero <<0,100>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0>
- background BackGround <>
+ background Background <>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  

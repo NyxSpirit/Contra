@@ -22,7 +22,6 @@ includelib user32.lib
 includelib masm32.lib
 
 include contra.inc
-
 .code
 
 start:
@@ -56,7 +55,7 @@ CmdShow:DWORD
 
 	 invoke CreateWindowEx, 0, addr ClassName, addr AppName, 
 		WS_VISIBLE or  WS_DLGFRAME, CW_USEDEFAULT, 
-		CW_USEDEFAULT, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE * 10, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE , NULL,
+		CW_USEDEFAULT, SCREEN_WIDTH, SCREEN_HEIGHT, NULL,
 		NULL, hInst, NULL
 	 mov hwnd, eax 
 
@@ -75,158 +74,9 @@ CmdShow:DWORD
  RunProc PROC hWnd:HWND
 	LOCAL rect: RECT 
 	.while TRUE
-		
-		;invoke UpdateWindow, hWnd
-		; ================  collision check
 
-		;invoke JudgeContraBulletCollision
-		
-		;invoke CollisionBackgroundJudge, addr contra, addr background
-		.if contra.position.pos_y > 360
-			mov contra.action, HEROACTION_SWIM
-			mov contra.jump_height, 0	
-			mov contra.move_dy, 0
-		.endif
+		invoke ContraTakeAction
 
-		.if contra.action == HEROACTION_DIE
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov contra.move_dx, -CONTRA_BASIC_MOV_SPEED
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerDieRightImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 7
-					invoke CreateHero, addr contra 
-				.endif
-			.else
-				mov contra.move_dx, CONTRA_BASIC_MOV_SPEED
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerDieLeftImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 7
-					invoke CreateHero, addr contra 
-				.endif
-			.endif
-		.elseif contra.action == HEROACTION_SWIM
-			.if contra.jump_height < CONTRA_FLOAT_HEIGHT
-				mov contra.move_dy, -CONTRA_FLOAT_SPEED
-				add contra.jump_height, CONTRA_FLOAT_SPEED
-			.else
-				mov contra.move_dy, CONTRA_FLOAT_SPEED
-			.endif
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov eax, hPlayerSwimRightImage
-				mov contra.hImage, eax
-			.else
-				mov eax, hPlayerSwimLeftImage
-				mov contra.hImage, eax
-			.endif
-		.elseif contra.action == HEROACTION_JUMP
-			.if contra.jump_height < MAX_JUMP_HEIGHT
-				mov contra.move_dy, -CONTRA_BASIC_JUMP_SPEED
-				add contra.jump_height, CONTRA_BASIC_JUMP_SPEED
-			.else
-				mov contra.move_dy, CONTRA_BASIC_JUMP_SPEED
-			.endif
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerJumpRightImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 4
-					mov contra.action_imageIndex, 0
-				.endif
-			.else
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerJumpLeftImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 4
-					mov contra.action_imageIndex, 0
-				.endif
-			.endif
-		.elseif contra.action == HEROACTION_CRAWL
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov eax, hPlayerCrawlRightImage
-				mov contra.hImage, eax
-			.else
-				mov eax, hPlayerCrawlLeftImage
-				mov contra.hImage, eax
-			.endif
-		.elseif contra.action == HEROACTION_RUN
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 6
-					mov contra.action_imageIndex, 0
-				.endif
-			.else
-				mov esi, contra.action_imageIndex
-				mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
-				mov contra.hImage, eax
-				inc contra.action_imageIndex
-				.if contra.action_imageIndex == 6
-					mov contra.action_imageIndex, 0
-				.endif
-			.endif
-		.elseif contra.action == HEROACTION_DIVE
-			.if contra.jump_height < CONTRA_FLOAT_HEIGHT
-				mov contra.move_dy, -CONTRA_FLOAT_SPEED
-				add contra.jump_height, CONTRA_FLOAT_SPEED
-			.else
-				mov contra.move_dy, CONTRA_FLOAT_SPEED
-			.endif
-				mov eax, hPlayerDiveImage
-				mov contra.hImage, eax
-		.elseif contra.action == HEROACTION_FALL
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov eax, hPlayerFallRightImage;
-				mov contra.hImage, eax
-			.else
-				mov eax, hPlayerFallLeftImage;
-				mov contra.hImage, eax
-			.endif
-		.else
-			.if contra.face_direction == DIRECTION_RIGHT
-				mov eax, hPlayerStandRightImage;
-				mov contra.hImage, eax
-			.else
-				mov eax, hPlayerStandLeftImage;
-				mov contra.hImage, eax
-			.endif
-		.endif
-		
-		; keep contra in the view
-		.if contra.position.pos_x > 250
-			.if contra.move_dx > 0
-				mov eax, contra.move_dx
-				sub background.b_offset, eax
-				mov contra.move_dx, 0	
-			.endif
-		.endif
-		.if contra.position.pos_x < 5
-			.if contra.move_dx < 0
-				mov contra.move_dx, 0
-			.endif
-		.endif 
-
-		; blink when invincible
-		.if contra.invincible_time > 0
-			mov eax, contra.invincible_time
-			mov bl, 2
-			div bl
-			.if ah == 0
-				mov contra.hImage, 0
-			.endif
-			dec contra.invincible_time
-		.endif
-
-
-		; update object positions
-		invoke UpdateHeroPosition, addr contra
 
 		invoke InvalidateRect, hWnd, NULL, 1		
 		invoke Sleep, 100
@@ -455,10 +305,158 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintObject ENDP
  PaintBackground PROC, hGraphics:DWORD
-	   
+	local imageWidth :DWORD   
+	local imageHeight:DWORD
 	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
-	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, 6000,450
+	invoke GdipGetImageWidth, hBackgroundImage, addr imageWidth
+	invoke GdipGetImageHeight, hBackgroundImage, addr imageHeight
+	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, imageWidth , imageHeight
 
 	ret
  PaintBackground ENDP
+
+ ContraTakeAction PROC
+	.if contra.action == HEROACTION_DIE
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov contra.move_dx, -CONTRA_BASIC_MOV_SPEED
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerDieRightImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 7
+				invoke CreateHero, addr contra 
+			.endif
+		.else
+			mov contra.move_dx, CONTRA_BASIC_MOV_SPEED
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerDieLeftImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 7
+				invoke CreateHero, addr contra 
+			.endif
+		.endif
+	.elseif contra.action == HEROACTION_SWIM
+		.if contra.jump_height < CONTRA_FLOAT_HEIGHT
+			mov contra.move_dy, -CONTRA_FLOAT_SPEED
+			add contra.jump_height, CONTRA_FLOAT_SPEED
+		.else
+			mov contra.move_dy, CONTRA_FLOAT_SPEED
+		.endif
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov eax, hPlayerSwimRightImage
+			mov contra.hImage, eax
+		.else
+			mov eax, hPlayerSwimLeftImage
+			mov contra.hImage, eax
+		.endif
+	.elseif contra.action == HEROACTION_JUMP
+		.if contra.jump_height < MAX_JUMP_HEIGHT
+			mov contra.move_dy, -CONTRA_BASIC_JUMP_SPEED
+			add contra.jump_height, CONTRA_BASIC_JUMP_SPEED
+		.else
+			mov contra.move_dy, CONTRA_BASIC_JUMP_SPEED
+		.endif
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerJumpRightImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 4
+				mov contra.action_imageIndex, 0
+			.endif
+		.else
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerJumpLeftImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 4
+				mov contra.action_imageIndex, 0
+			.endif
+		.endif
+	.elseif contra.action == HEROACTION_CRAWL
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov eax, hPlayerCrawlRightImage
+			mov contra.hImage, eax
+		.else
+			mov eax, hPlayerCrawlLeftImage
+			mov contra.hImage, eax
+		.endif
+	.elseif contra.action == HEROACTION_RUN
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 6
+				mov contra.action_imageIndex, 0
+			.endif
+		.else
+			mov esi, contra.action_imageIndex
+			mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
+			mov contra.hImage, eax
+			inc contra.action_imageIndex
+			.if contra.action_imageIndex == 6
+				mov contra.action_imageIndex, 0
+			.endif
+		.endif
+	.elseif contra.action == HEROACTION_DIVE
+		.if contra.jump_height < CONTRA_FLOAT_HEIGHT
+			mov contra.move_dy, -CONTRA_FLOAT_SPEED
+			add contra.jump_height, CONTRA_FLOAT_SPEED
+		.else
+			mov contra.move_dy, CONTRA_FLOAT_SPEED
+		.endif
+			mov eax, hPlayerDiveImage
+			mov contra.hImage, eax
+	.elseif contra.action == HEROACTION_FALL
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov eax, hPlayerFallRightImage;
+			mov contra.hImage, eax
+		.else
+			mov eax, hPlayerFallLeftImage;
+			mov contra.hImage, eax
+		.endif
+	.else
+		.if contra.face_direction == DIRECTION_RIGHT
+			mov eax, hPlayerStandRightImage;
+			mov contra.hImage, eax
+		.else
+			mov eax, hPlayerStandLeftImage;
+			mov contra.hImage, eax
+		.endif
+	.endif
+		
+	invoke CollisionBackgroundJudge, addr contra, addr background
+
+	; keep contra in the view
+	.if contra.position.pos_x > 250
+		.if contra.move_dx > 0
+			mov eax, contra.move_dx
+			sub background.b_offset, eax
+			mov contra.move_dx, 0	
+		.endif
+	.endif
+	.if contra.position.pos_x < 5
+		.if contra.move_dx < 0
+			mov contra.move_dx, 0
+		.endif
+	.endif 
+
+	; blink when invincible
+	.if contra.invincible_time > 0
+		mov eax, contra.invincible_time
+		mov bl, 2
+		div bl
+		.if ah == 0
+			mov contra.hImage, 0
+		.endif
+		dec contra.invincible_time
+	.endif
+
+
+	; update object positions
+	invoke UpdateHeroPosition, addr contra
+	ret
+ ContraTakeAction ENDP
 end start 
