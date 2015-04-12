@@ -316,7 +316,8 @@ CreateHero PROC hero:PTR Hero
 	mov [esi].Hero.invincible_time, CONTRA_INVINCIBLE_TIME
 	mov [esi].Hero.shoot, 0
 	mov [esi].Hero.face_direction, DIRECTION_RIGHT
-	mov [esi].Hero.shootdirection, DIRECTION_RIGHT
+	mov [esi].Hero.shoot_dx, BULLET_SPEED
+	mov [esi].Hero.shoot_dy, 0
 	;mov [esi].Hero.weapon, <>
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, MAX_JUMP_HEIGHT
@@ -339,6 +340,7 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 	.endif
 
 	.if		command == CMD_MOVERIGHT
+
 			.if formerAction == HEROACTION_DIVE
 			.else
 				mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
@@ -348,6 +350,7 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 				.endif
 			.endif
 	.elseif command == CMD_MOVELEFT
+
 			.if formerAction == HEROACTION_DIVE
 			.else
 				mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
@@ -381,7 +384,23 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 			.endif
 	.elseif command == CMD_UP
 	.elseif command == CMD_SHOOT
-			mov [esi].Hero.shoot, 1
+			.if formerAction == HEROACTION_RUN || formerAction == HEROACTION_STAND
+				
+				mov [esi].Hero.shoot, 1
+			.elseif formerAction == HEROACTION_JUMP || formerAction == HEROACTION_FALL
+				mov [esi].Hero.shoot, 1
+			.elseif formerAction == HEROACTION_CRAWL
+				mov [esi].Hero.shoot_dy, 0
+				.if [esi].Hero.face_direction == DIRECTION_RIGHT
+					mov [esi].Hero.shoot_dx, BULLET_SPEED
+				.else 
+					mov [esi].Hero.shoot_dx, -BULLET_SPEED
+				.endif
+				mov [esi].Hero.shoot, 1
+			.elseif formerAction == HEROACTION_SWIM
+				mov [esi].Hero.shoot, 1
+			.endif
+
 	.elseif command == CMD_CANCELSHOOT
 			mov [esi].Hero.shoot, 0
 	.elseif command == CMD_CANCELCRAWL
@@ -512,7 +531,82 @@ ChangeBulletRect	PROC	bullet:PTR Bullet,rect:PTR	CollisionRect
 	ret
 ChangeBulletRect	ENDP
 ;================================
+CreateBullet  PROC bullets:PTR Bullets,hero:PTR Hero, hImage: DWORD
+	local shootOffsetX: SDWORD
+	local shootOffsetY: SDWORD
 
+	mov esi, bullets
+	.if [esi].Bullets.number >= MAX_BULLETS_NUMBER
+		ret
+	.endif
+	mov eax, [esi].Bullets.number 
+	inc [esi].Bullets.number	
+	mov bl, TYPE Bullet
+	mul bl
+	lea esi, [esi].Bullets.bullets[eax]
+	 
+	mov edi, hero
+
+	mov eax, [edi].Hero.shoot_dx
+	mov [esi].Bullet.move_dx, eax
+	;shl eax, 1
+	mov shootOffsetX, eax
+	
+	mov eax, [edi].Hero.shoot_dy
+	mov [esi].Bullet.move_dy, eax
+	;shl eax, 1
+	mov shootOffsetY, eax
+
+	; shoot from the middle of collision rect
+	;				plus basic speed vector * 2
+	mov eax, [edi].Hero.range.r_width
+	shr eax, 1
+	add eax, [edi].Hero.range.position.pos_x
+	add eax, shootOffsetX
+	mov [esi].Bullet.position.pos_x, eax
+	mov [esi].Bullet.range.position.pos_x, eax
+
+	mov eax, [edi].Hero.range.r_height
+	shr eax, 1
+	add eax, [edi].Hero.range.position.pos_y
+	add eax, shootOffsetY
+	mov [esi].Bullet.position.pos_y, eax
+	mov [esi].Bullet.range.position.pos_y, eax
+	
+	mov [esi].Bullet.range.r_height, 1
+	mov [esi].Bullet.range.r_width, 1
+
+	mov eax, hImage
+	mov [esi].Bullet.hImage, eax 
+	ret
+CreateBullet  ENDP
+;==================================
+DeleteBullet  PROC bullets:PTR Bullets,index:DWORD
+	local num : DWORD
+	mov esi, bullets
+
+	mov eax, [esi].Bullets.number
+	mov num, eax
+
+	mov ecx, num
+	sub ecx, index
+	mov eax, TYPE Bullet
+	mul cx
+	mov ecx, eax
+
+	mov ebx, index
+	mov eax, TYPE Bullet
+	mul bx
+	lea edi, [esi].Bullets.bullets[eax]
+	add eax, TYPE Bullet
+	lea esi, [esi].Bullets.bullets[eax]
+	rep movsb
+	
+	mov esi, bullets
+	dec [esi].Bullets.number
+
+	ret
+DeleteBullet  ENDP
 ;==================================
 UpdateHeroPosition  PROC hero:PTR Hero
 	mov		esi, hero

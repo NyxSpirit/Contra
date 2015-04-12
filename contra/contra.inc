@@ -13,7 +13,7 @@ PaintObjects PROTO :DWORD
 PaintObject PROTO :DWORD, :DWORD
 
 ContraTakeAction PROTO
-
+BulletsMove PROTO
 
 DISPLAY_SCALE EQU 2
 
@@ -33,7 +33,7 @@ IDR_WAVE1 EQU 104
  playerJumpLeftFiles db "Res\\player\\player_jump_left", 0
  playerDieRightFiles db "Res\\player\\player_die_right", 0
  playerDieLeftFiles db "Res\\player\\player_die_left", 0
- playerStandRightFile db "Res\\player\\player_left1_face.png", 0
+ playerStandRightFile db "Res\\player\\player_stand_right.png", 0
  playerStandLeftFile db "Res\\player\\player_stand_left.png", 0
  playerCrawlRightFile db "Res\\player\\player_down_right.png", 0
  playerCrawlLeftFile db "Res\\player\\player_down_left.png", 0
@@ -43,14 +43,18 @@ IDR_WAVE1 EQU 104
  playerFallRightFile db "Res\\player\\player_fall_right.png", 0
  playerFallLeftFile db "Res\\player\\player_fall_left.png", 0
  playerDiveFile db "Res\\player\\player_dive.png", 0
+
+ bulletFile  db "Res\\bullet\\player_dive.png", 0
 ;============================== Window Params =========
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
 
 ;PAGE_SCALE REAL4 0.1
 ;=============================== Game params ===========
- contra Hero <<0,100>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0>
+ contra Hero <<0,100>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0,0>
  background Background <>
+ contraBullets Bullets <>
+ npcBullets Bullets <>
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
@@ -73,6 +77,8 @@ IDR_WAVE1 EQU 104
  hPlayerJumpLeftImages dd 4 dup (?)
  hPlayerDieRightImages dd 7 dup (?)
  hPlayerDieLeftImages dd 7 dup (?)
+
+ hBulletImage dd ?
  hMusic dd ?
 
  ;==============  Thread Handles

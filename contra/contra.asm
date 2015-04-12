@@ -76,7 +76,10 @@ CmdShow:DWORD
 	.while TRUE
 
 		invoke ContraTakeAction
-
+		.if contra.shoot == 1
+			invoke CreateBullet, addr contraBullets, addr contra, hBulletImage
+		.endif
+		invoke BulletsMove
 
 		invoke InvalidateRect, hWnd, NULL, 1		
 		invoke Sleep, 100
@@ -128,7 +131,11 @@ CmdShow:DWORD
 		invoke UnicodeStr, ADDR playerDiveFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerDiveImage
 
-		;invoke CreateHero, addr contra 
+		
+		invoke UnicodeStr, ADDR bulletFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hBulletImage
+
+		invoke CreateHero, addr contra 
 		
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
@@ -157,14 +164,39 @@ CmdShow:DWORD
 			invoke TakeAction, addr contra, CMD_MOVERIGHT
 		.elseif keyState[VK_A] >= 128
 			invoke TakeAction, addr contra, CMD_MOVELEFT
+		.else
+			invoke TakeAction, addr contra, CMD_STAND
 		.endif
 		.if keyState[VK_S] >= 128
 			invoke TakeAction, addr contra, CMD_DOWN
+		.elseif keyState[VK_W] >= 128
+			invoke TakeAction, addr contra, CMD_UP
 		.endif
 		.if keyState[VK_K] >= 128
 			invoke TakeAction, addr contra, CMD_JUMP
 		.endif
+		
 		.if keyState[VK_J] >= 128
+			.if keyState[VK_W] >= 128
+				mov contra.shoot_dy, -BULLET_SPEED
+			.elseif keyState[VK_S] >= 128
+				mov contra.shoot_dy, BULLET_SPEED
+			.else
+				mov contra.shoot_dy, 0
+			.endif
+			.if keyState[VK_D] >= 128
+				mov contra.shoot_dx, BULLET_SPEED
+			.elseif keyState[VK_A] >= 128
+				mov contra.shoot_dx, -BULLET_SPEED
+			.elseif contra.shoot_dy == 0
+				.if contra.face_direction == DIRECTION_RIGHT
+					mov contra.shoot_dx, BULLET_SPEED
+				.else 
+					mov contra.shoot_dx, -BULLET_SPEED
+				.endif
+			.else
+				mov contra.shoot_dx, 0
+			.endif 
 			invoke TakeAction, addr contra, CMD_SHOOT
 		.endif
 	.elseif uMsg == WM_KEYUP
@@ -233,6 +265,7 @@ UnicodeStr	ENDP
 	INVOKE StrLen, [target]
 	ret
 StrConcat ENDP
+
 LoadImageResources PROC
 	local buffer [64] :BYTE
 	
@@ -280,8 +313,22 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
  SoundProc ENDP
  
  PaintObjects PROC, hGraphics:DWORD
-    
+    local cnt: DWORD
 	invoke PaintObject, hGraphics, addr contra
+	
+	mov ecx, contraBullets.number
+	mov cnt, ecx
+	.while cnt > 0
+		mov eax, cnt
+		dec eax
+		.if cnt == 2
+			lea ecx, contraBullets.bullets[eax]
+		.endif
+		mov bl,TYPE Bullet
+		mul bl
+		invoke PaintObject, hGraphics, addr contraBullets.bullets[eax]
+		dec cnt 
+	.endw
 	
 	ret
  PaintObjects ENDP
@@ -290,6 +337,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
     local imageWidth :DWORD
 	local imageHeight : DWORD
 	mov esi, hObj
+	
 	invoke GdipGetImageWidth, (Object PTR [esi]).hImage, addr imageWidth
 	mov ebx,imageWidth
 	mov al,DISPLAY_SCALE
@@ -301,7 +349,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	mul bx
 	mov imageHeight, eax
 	invoke GdipDrawImageRectI, hGraphics, (Object PTR [esi]).hImage,(Object PTR [esi]).position.pos_x,(Object PTR [esi]).position.pos_y,
-						80,100
+						imageWidth, imageHeight
 	ret
  PaintObject ENDP
  PaintBackground PROC, hGraphics:DWORD
@@ -459,4 +507,32 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke UpdateHeroPosition, addr contra
 	ret
  ContraTakeAction ENDP
+
+ BulletsMove PROC
+	local cnt: DWORD
+	mov eax, contraBullets.number
+	mov cnt, eax
+	.while cnt > 0
+		mov eax, cnt
+		dec eax
+		mov bl, TYPE Bullet
+		mul bl
+		mov esi, eax
+
+		mov eax, contraBullets.bullets[esi].move_dx
+		add contraBullets.bullets[esi].position.pos_x, eax
+		mov eax, contraBullets.bullets[esi].move_dy
+		add contraBullets.bullets[esi].position.pos_y, eax
+
+		mov eax, contraBullets.bullets[esi].position.pos_x
+		mov ebx, contraBullets.bullets[esi].position.pos_y
+		
+		dec cnt 
+		.if eax > SCREEN_WIDTH || ebx > SCREEN_HEIGHT 
+			invoke DeleteBullet, addr contraBullets, cnt
+		.endif
+	.endw
+	ret
+ BulletsMove ENDP
+
 end start 

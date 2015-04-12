@@ -6,12 +6,16 @@ DIRECTION_DOWN EQU 270
 DIRECTION_LEFT EQU 180
 
 MAX_JUMP_HEIGHT EQU 80
-CONTRA_BASIC_MOV_SPEED EQU 5
-CONTRA_BASIC_JUMP_SPEED EQU 15
+CONTRA_BASIC_MOV_SPEED EQU 8
+CONTRA_BASIC_JUMP_SPEED EQU 20
 CONTRA_FLOAT_HEIGHT EQU 6
 CONTRA_FLOAT_SPEED EQU 2
 CONTRA_HEIGHT EQU 25
 CONTRA_INVINCIBLE_TIME EQU 17
+
+CONTRA_BULLET_INTERVAL EQU 2
+
+BULLET_SPEED EQU 25
 
 CMD_MOVERIGHT EQU 1
 CMD_MOVELEFT EQU 2
@@ -23,7 +27,6 @@ CMD_CANCELCRAWL EQU 7
 CMD_STAND EQU 8
 CMD_UP EQU 9
 CMD_SWIM EQU 10
-
 
 BACKGROUNDHEIGHT	EQU	16
 BACKGROUNDSCREENWIDTH		EQU	16
@@ -102,26 +105,35 @@ Hero STRUCT
 	invincible_time  DWORD   0
 
 	weapon		Weapon	<>
-	shootdirection	DWORD	0
+	shoot_dx	SDWORD	0
+	shoot_dy	SDWORD	0
 	face_direction	DWORD	0
 	move_dx		SDWORD 0
 	move_dy		SDWORD 0 
 	
 Hero ENDS
 ;=================================
-
+ALLIANCE_PLAYER EQU 0
+ALLIANCE_ENEMY EQU 1
 ;=================================
 Bullet	STRUCT
 	position	Position	<>
 	ALIGN		CollisionRect
 	range		CollisionRect	<>
 	hImage		DWORD     0
-	;bullet alliance 0:hero 1:enemy
-	alliance	BYTE	0
-	speed		BYTE	1
 	ALIGN		Position	
-	direction	DWORD	0
+	move_dx		SDWORD    0
+	move_dy		SDWORD	  0
 Bullet	ENDS
+;=================================
+;=================================
+MAX_BULLETS_NUMBER EQU  20
+
+Bullets  STRUCT
+	number 		DWORD	0
+	;alliance	BYTE    ALLIANCE_PLAYER
+	bullets     Bullet  MAX_BULLETS_NUMBER dup (<>)
+Bullets  ENDS
 ;=================================
 
 ;=================================
@@ -172,22 +184,30 @@ Background	ENDS
 ;=================================
 
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
+CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
+
 InitMap			PROTO
 ResetStat		PROTO
+
 TakeAction			PROTO	:PTR Hero,:DWORD
+
 ChangeHeroDirection	PROTO :PTR Hero,:DWORD
 ChangeHeroRect  PROTO   :PTR Hero,:PTR	CollisionRect
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
 SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
-BridgeBomb		PROTO	:PTR Bridge
-ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
-TowerShoot		PROTO	:PTR Tower,:DWORD
-TowerDamage		PROTO	:PTR Tower
-ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
-ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
-CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
 CreateHero PROTO :PTR Hero
 UpdateHeroCollisionRect PROTO :PTR Hero
 UpdateHeroPosition PROTO :PTR Hero
 UpdateHeroAction PROTO :PTR Hero, :DWORD
+
+CreateBullet		PROTO   :PTR Bullets,:PTR Hero, :DWORD
+DeleteBullet        PROTO   :PTR Bullets,:DWORD
+ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
+ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
+
+ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
+TowerShoot		PROTO	:PTR Tower,:DWORD
+TowerDamage		PROTO	:PTR Tower
+
+BridgeBomb		PROTO	:PTR Bridge
 ENDIF
