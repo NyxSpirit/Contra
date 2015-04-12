@@ -199,7 +199,7 @@ CmdShow:DWORD
 			.endif
 		.endif
 		
-		; move view along with contra
+		; keep contra in the view
 		.if contra.position.pos_x > 250
 			.if contra.move_dx > 0
 				mov eax, contra.move_dx
@@ -207,7 +207,13 @@ CmdShow:DWORD
 				mov contra.move_dx, 0	
 			.endif
 		.endif
+		.if contra.position.pos_x < 5
+			.if contra.move_dx < 0
+				mov contra.move_dx, 0
+			.endif
+		.endif 
 
+		; blink when invincible
 		.if contra.invincible_time > 0
 			mov eax, contra.invincible_time
 			mov bl, 2
@@ -217,11 +223,10 @@ CmdShow:DWORD
 			.endif
 			dec contra.invincible_time
 		.endif
+
+
 		; update object positions
-		mov eax, contra.move_dx
-		add contra.position.pos_x, eax
-		mov eax, contra.move_dy
-		add contra.position.pos_y, eax
+		invoke UpdateHeroPosition, addr contra
 
 		invoke InvalidateRect, hWnd, NULL, 1		
 		invoke Sleep, 100

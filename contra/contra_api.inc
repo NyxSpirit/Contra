@@ -48,7 +48,7 @@ Position ENDS
 ;=================================
 CollisionRect	STRUCT
 	r_width		DWORD	0 
-	r_length	DWORD	0
+	r_height	DWORD	0
 	ALIGN		Position
 	position	Position	<>
 CollisionRect	ENDS
@@ -174,6 +174,7 @@ InitMap			PROTO
 ResetStat		PROTO
 TakeAction			PROTO	:PTR Hero,:DWORD
 ChangeHeroDirection	PROTO :PTR Hero,:DWORD
+ChangeHeroRect  PROTO   :PTR Hero,:PTR	CollisionRect
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
 SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
 BridgeBomb		PROTO	:PTR Bridge
@@ -184,5 +185,6 @@ ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
 ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
 CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
 CreateHero PROTO :PTR Hero
-
+UpdateHeroCollisionRect PROTO :PTR Hero
+UpdateHeroPosition PROTO :PTR Hero
 ENDIF

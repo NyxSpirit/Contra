@@ -27,7 +27,7 @@ CollisionJudge PROC Rect1:PTR CollisionRect,
 	mov		esi,Rect1
 	mov		ebx,[esi].CollisionRect.r_width
 	mov		r1_width,ebx
-	mov		ebx,[esi].CollisionRect.r_length
+	mov		ebx,[esi].CollisionRect.r_height
 	mov		r1_height,ebx
 	mov		ebx,[esi].CollisionRect.position.pos_x
 	mov		r1_x,ebx
@@ -37,7 +37,7 @@ CollisionJudge PROC Rect1:PTR CollisionRect,
 	mov		esi,Rect2
 	mov		ebx,[esi].CollisionRect.r_width
 	mov		r2_width,ebx
-	mov		ebx,[esi].CollisionRect.r_length
+	mov		ebx,[esi].CollisionRect.r_height
 	mov		r2_height,ebx
 	mov		ebx,[esi].CollisionRect.position.pos_x
 	mov		r2_x,ebx
@@ -213,6 +213,7 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 	mov eax, formerAction
 	.if eax != [esi].Hero.action
 		mov [esi].Hero.action_imageIndex, 0
+		invoke UpdateHeroCollisionRect, hero
 	.endif
 @@:
 	ret
@@ -314,14 +315,57 @@ ChangeBulletRect	PROC	bullet:PTR Bullet,rect:PTR	CollisionRect
 	mov		ebx,[eax].CollisionRect.r_width
 	mov		[esi].Bullet.range.r_width,ebx
 
-	mov		ebx,[eax].CollisionRect.r_length
-	mov		[esi].Bullet.range.r_length,ebx
+	mov		ebx,[eax].CollisionRect.r_height
+	mov		[esi].Bullet.range.r_height,ebx
 
 	ret
 ChangeBulletRect	ENDP
 ;================================
 
 ;==================================
+UpdateHeroPosition  PROC hero:PTR Hero
+	mov		esi, hero
+
+	mov eax, [esi].Hero.move_dx
+	add [esi].Hero.position.pos_x, eax
+	add [esi].Hero.range.position.pos_x, eax
+	mov eax, [esi].Hero.move_dy
+	add [esi].Hero.position.pos_y, eax
+	add [esi].Hero.range.position.pos_y, eax
+
+	ret
+UpdateHeroPosition  ENDP  
+
+;=======================================
+UpdateHeroCollisionRect PROC hero: PTR Hero
+	local rect: CollisionRect
+	mov esi, hero
+	.if [esi].Hero.action == HEROACTION_RUN
+		mov rect.r_width, 30
+		mov rect.r_height, 40
+		mov eax, [esi].Hero.position.pos_x
+		add eax, 10
+		mov rect.position.pos_x, eax
+		mov eax, [esi].Hero.position.pos_y
+		add eax, 10
+		mov rect.position.pos_y, eax
+	
+		invoke ChangeHeroRect, hero, addr rect
+	.elseif [esi].Hero.action == HEROACTION_JUMP
+		mov rect.r_width, 20
+		mov rect.r_height, 20
+		mov eax, [esi].Hero.position.pos_x
+		add eax, 10
+		mov rect.position.pos_x, eax
+		mov eax, [esi].Hero.position.pos_y
+		add eax, 10
+		mov rect.position.pos_y, eax
+	
+		invoke ChangeHeroRect, hero, addr rect
+	.else
+	.endif
+	ret	
+UpdateHeroCollisionRect ENDP
 ChangeHeroRect	PROC	hero:PTR Hero,rect:PTR	CollisionRect
 	mov		esi,hero
 	mov		eax,rect
@@ -335,8 +379,8 @@ ChangeHeroRect	PROC	hero:PTR Hero,rect:PTR	CollisionRect
 	mov		ebx,[eax].CollisionRect.r_width
 	mov		[esi].Hero.range.r_width,ebx
 
-	mov		ebx,[eax].CollisionRect.r_length
-	mov		[esi].Hero.range.r_length,ebx
+	mov		ebx,[eax].CollisionRect.r_height
+	mov		[esi].Hero.range.r_height,ebx
 
 	ret
 ChangeHeroRect	ENDP
