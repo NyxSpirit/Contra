@@ -10,11 +10,193 @@ include contra_api.inc
 
 .code
 
+;================================
 CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
+
+	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
+			x:DWORD,y:DWORD,position:DWORD,img_width:DWORD,img_height:DWORD,speed:DWORD,jump_speed:DWORD
 	;0:air,1:water,2:ground,3:bridge
 	
+	mov		esi,hero
+	mov		eax,[esi].Hero.move_dx
+	mov		ebx,[esi].Hero.move_dy
+	.if		eax == 0 && ebx == 0
+			ret
+	.endif
+
+	mov		eax,CONTRA_BASIC_MOV_SPEED
+	mov		speed,eax
+	mov		eax,CONTRA_BASIC_JUMP_SPEED
+	mov		jump_speed,eax
+	mov		img_width,BACKGROUNDIMAGE_UNITWIDTH
+	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
+	
+	mov		eax,[esi].Hero.position.pos_x
+	mov		ebx,[esi].Hero.position.pos_y
+	mov		ecx,background
+
+	.if		ebx >= 448
+			mov	eax,HEROACTION_DIE
+			mov	[esi].Hero.action,eax
+	.endif	
+
+	mov		edx,0
+	sub		eax,[ecx].Background.b_offset
+	div		img_height
+	mov		x,eax
+
+	mov		edx,0
+	mov		eax,ebx
+	div		img_height
+	mov		y,eax
+
+	mov		eax,img_height
+	mul		y
+	add		eax,x
+	mov		position,eax
+
+	
+
+	;left block
+	mov		ecx,background
+	mov		eax,position
+	dec		eax
+	mov		ebx,[ecx].Background.b_array[eax]
+
+	mov		ecx,[esi].Hero.face_direction
+	.if		ebx == BGTYPE_AIR
+			.if	ecx == DIRECTION_LEFT
+			.endif
+	.elseif	ebx == BGTYPE_WATER
+			.if	ecx == DIRECTION_LEFT
+			.endif
+	.elseif	ebx == BGTYPE_GROUND
+			;pos_y
+			mov		eax,img_height
+			mov		ebx, y
+			mul		ebx
+			mov	rect_left.position.pos_y,eax
+			;pos_x
+			mov	eax,x
+			dec	eax	;left
+			mul	img_width
+			mov	edx,background
+			sub	eax,[edx].Background.b_offset
+			mov	rect_left.position.pos_x,eax
+
+			mov	eax,img_width
+			mov	rect_left.r_width,eax
+			mov	eax,img_height
+			mov	rect_left.r_height,eax
+			.if	ecx == DIRECTION_LEFT
+				INVOKE	CollisionJudge,addr	rect_left,addr [esi].Hero.range
+				.if eax == 1
+					mov [esi].Hero.move_dx,0
+				.elseif eax == 0
+				.endif
+			.endif
+	.elseif	ebx == BGTYPE_BRIDGE
+			.if	ecx == DIRECTION_LEFT
+			.endif
+	.endif
+
+	;right block
+	mov		ecx,background
+	mov		eax,position
+	inc		eax
+	mov		ebx,[ecx].Background.b_array[eax]
+
+	mov		ecx,[esi].Hero.face_direction
+	.if		ebx == BGTYPE_AIR
+			.if	ecx == DIRECTION_RIGHT
+			.endif
+	.elseif	ebx == BGTYPE_WATER
+			.if	ecx == DIRECTION_RIGHT
+			.endif
+	.elseif	ebx == BGTYPE_GROUND
+			;pos_y
+			mov	eax,y
+			mul	img_height
+			mov	rect_right.position.pos_y,eax
+			;pos_x
+			mov	eax,x
+			inc	eax	;right
+			mul	img_height
+			mov	edx,background
+			sub	eax,[edx].Background.b_offset
+			mov	rect_right.position.pos_x,eax
+
+			mov	eax,img_width
+			mov	rect_left.r_width,eax
+			mov	eax,img_height
+			mov	rect_left.r_height,eax
+			.if	ecx == DIRECTION_RIGHT
+				INVOKE	CollisionJudge,addr	rect_right,addr [esi].Hero.range
+				.if eax == 1
+					mov [esi].Hero.move_dx,0
+				.elseif eax == 0
+				.endif
+			.endif
+	.elseif	ebx == BGTYPE_BRIDGE
+			.if	ecx == DIRECTION_RIGHT
+			.endif
+	.endif
+
+	;down block
+	mov		ecx,background
+	mov		eax,position
+	mov		ebx,[ecx].Background.b_array[eax]
+	mov		ecx,[esi].Hero.face_direction
+
+	;pos_y
+	mov	eax,y
+	mul	img_height
+	mov	rect_down.position.pos_y,eax
+	;pos_x
+	mov	eax,x
+	mul	img_height
+	mov	edx,background
+	sub	eax,[edx].Background.b_offset
+	mov	rect_down.position.pos_x,eax
+
+	mov	eax,img_width
+	mov	rect_left.r_width,eax
+	mov	eax,img_height
+	mov	rect_left.r_height,eax
+	.if		ebx == BGTYPE_AIR
+			.if	ecx == DIRECTION_DOWN
+			.endif
+	.elseif	ebx == BGTYPE_WATER
+			.if	ecx == DIRECTION_DOWN
+				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
+				.if eax == 1
+					mov	eax,HEROACTION_SWIM
+					mov	[esi].Hero.action,eax
+					mov	eax,1
+				.elseif eax == 0
+				.endif
+			.endif
+	.elseif	ebx == BGTYPE_GROUND	
+			.if	ecx == DIRECTION_DOWN
+				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
+				.if eax == 1
+					mov	[esi].Hero.move_dy,0
+				.elseif eax == 0
+				.endif
+			.endif
+	.elseif	ebx == BGTYPE_BRIDGE
+			.if	ecx == DIRECTION_DOWN
+				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
+				.if eax == 1
+					mov	[esi].Hero.move_dy,0
+				.elseif eax == 0
+				.endif
+			.endif
+	.endif
+
 	ret
 CollisionBackgroundJudge	ENDP
+;================================
 
 ;=================================
 CollisionJudge PROC Rect1:PTR CollisionRect,
