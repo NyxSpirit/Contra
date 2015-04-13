@@ -43,15 +43,11 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		edx,0
 	sub		eax,[ecx].Background.b_offset
 	div		img_width
-	.if	edx	> 0
-		;inc		eax
-	.endif
 	mov		x,eax
 
 	mov		edx,0
 	mov		eax,ebx
 	div		img_height
-	;inc		eax
 	mov		y,eax
 
 	mov		eax,BACKGROUNDTOTALWIDTH
@@ -87,6 +83,10 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	.elseif	bl == BGTYPE_GROUND	
 		.if	[esi].Hero.move_dy > 0
 			invoke UpdateHeroAction, hero, HEROACTION_STAND
+			mov	eax,img_height
+			mul	y
+			sub eax,95
+			mov	[esi].Hero.position.pos_y,eax
 			mov	[esi].Hero.move_dy,0
 			ret
 		.endif
@@ -118,11 +118,13 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 		.if	[esi].Hero.move_dx > 0
 			.if	bl == BGTYPE_GROUND
 				add	[esi].Hero.position.pos_y,-25
+				add	[esi].Hero.position.pos_x,15
 				invoke UpdateHeroAction, hero, HEROACTION_STAND					
 			.endif
 		.elseif	[esi].Hero.move_dx < 0
 			.if	cl == BGTYPE_GROUND
 				add	[esi].Hero.position.pos_y,-25
+				add	[esi].Hero.position.pos_x,-15
 				invoke UpdateHeroAction, hero, HEROACTION_STAND
 			.endif
 		.else
@@ -428,7 +430,6 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 				mov newAction, HEROACTION_JUMP
 			.endif
 			.if formerAction == HEROACTION_CRAWL
-				mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
@@ -477,7 +478,9 @@ UpdateHeroAction PROC hero:PTR Hero, newAction: DWORD
 	mov eax, newAction
 	.if eax != [esi].Hero.action
 		.if newAction == HEROACTION_FALL
-			add [esi].Hero.position.pos_y, 32
+			.if	[esi].Hero.action == HEROACTION_CRAWL
+				add [esi].Hero.position.pos_y, 32
+			.endif
 		.endif
 		mov [esi].Hero.action, eax
 		mov [esi].Hero.action_imageIndex, 0
@@ -685,7 +688,7 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 	local rect: CollisionRect
 	mov esi, hero
 	.if [esi].Hero.action == HEROACTION_RUN
-		mov rect.r_width,  60
+		mov rect.r_width,  40
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -695,7 +698,7 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_STAND
-		mov rect.r_width,  60
+		mov rect.r_width,  40
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -715,7 +718,7 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_FALL
-		mov rect.r_width,  60
+		mov rect.r_width,  40
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -725,7 +728,7 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_DIE
-		mov rect.r_width,  80
+		mov rect.r_width,  70
 		mov rect.r_height, 20
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          0
@@ -755,7 +758,7 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_CRAWL
-		mov rect.r_width,  80
+		mov rect.r_width,  70
 		mov rect.r_height, 20
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          0
