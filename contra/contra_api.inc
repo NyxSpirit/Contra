@@ -228,6 +228,7 @@ Events ENDS
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
 CollisionBulletJudge PROTO :PTR Hero, :PTR Bullets
+CollisionEnemyJudge PROTO :PTR Hero,:PTR Robots
 InitMap			PROTO  background:PTR Background
 ResetStat		PROTO
 
