@@ -56,15 +56,15 @@ IDR_WAVE1 EQU 104
  staticRobotShootLeftFiles db "Res\\npc\\npc1_left", 0
  staticRobotShootLeftDownFiles db "Res\\npc\\npc1_leftdown", 0
  staticRobotShootLeftUpFiles db "Res\\npc\\npc1_leftup", 0
- staticRobotDieRightFiles db "1", 0
- staticRobotDieLeftFiles db  "1", 0
+ staticRobotDieRightFiles db "Res\\npc\\npc1_die_right", 0
+ staticRobotDieLeftFiles db  "Res\\npc\\npc1_die_left", 0
 
  dynamicRobotRunRightFiles db "Res\\npc\\npc2_right", 0
  dynamicRobotJumpRightFile db "Res\\npc\\npc2_right1.png", 0
- dynamicRobotDieRightFiles db "Res\\npc\\npc2_right", 0
+ dynamicRobotDieRightFiles db "Res\\npc\\npc2_die_right", 0
  dynamicRobotRunLeftFiles db "Res\\npc\\npc2_left", 0
- dynamicRobotJumpLeftFile db "Res\\npc\\npc2_left2.png", 0
- dynamicRobotDieLeftFiles db "Res\\npc\\npc2_left", 0
+ dynamicRobotJumpLeftFile db "Res\\npc\\npc2_left1.png", 0
+ dynamicRobotDieLeftFiles db "Res\\npc\\npc2_die_left", 0
 
 ;============================== Window Params =========
  ClassName db "WinClass", 0
@@ -109,15 +109,17 @@ IDR_WAVE1 EQU 104
  hStaticRobotShootLeftImages dd 2 dup (?)
  hStaticRobotShootLeftUpImages dd 2 dup (?)
  hStaticRobotShootLeftDownImages dd 2 dup (?)
- hStaticRobotDieLeftImages dd 2 dup (?)
- hStaticRobotDieRightImages dd 2 dup (?)
+ hStaticRobotDieLeftImages dd 4	 dup (?)
+ hStaticRobotDieRightImages dd 4 dup (?)
 
  hDynamicRobotRunRightImages dd 5 dup (?)
  hDynamicRobotJumpRightImage dd ?
- hDynamicRobotDieRightImages dd 5 dup (?)
+ hDynamicRobotDieRightImages dd 4 dup (?)
  hDynamicRobotRunLeftImages dd 5 dup (?)
  hDynamicRobotJumpLeftImage dd ?
- hDynamicRobotDieLeftImages dd 5 dup (?)
+ hDynamicRobotDieLeftImages dd 4 dup (?)
+
+
  hBulletImages dd 4 dup (?)
 
  hMusic dd ?

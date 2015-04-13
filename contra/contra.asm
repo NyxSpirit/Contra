@@ -209,11 +209,17 @@ CmdShow:DWORD
 		invoke LoadImageSeries, ADDR staticRobotShootLeftFiles, 2, addr hStaticRobotShootLeftImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR staticRobotShootLeftDownFiles, 2, addr hStaticRobotShootLeftDownImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR staticRobotShootLeftUpFiles, 2, addr hStaticRobotShootLeftUpImages, ADDR IMAGETYPE_PNG
-		
+		invoke LoadImageSeries, ADDR staticRobotDieLeftFiles, 4, addr hStaticRobotDieLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR staticRobotDieRightFiles, 4, addr hStaticRobotDieRightImages, ADDR IMAGETYPE_PNG
+
 		invoke LoadImageSeries, ADDR dynamicRobotRunRightFiles, 5, addr hDynamicRobotRunRightImages, ADDR IMAGETYPE_PNG
-		invoke LoadImageSeries, ADDR dynamicRobotDieRightFiles, 5, addr hDynamicRobotDieRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR dynamicRobotDieRightFiles, 4, addr hDynamicRobotDieRightImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR dynamicRobotRunLeftFiles, 5, addr hDynamicRobotRunLeftImages, ADDR IMAGETYPE_PNG
-		invoke LoadImageSeries, ADDR dynamicRobotDieLeftFiles, 5, addr hDynamicRobotDieLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR dynamicRobotDieLeftFiles, 4, addr hDynamicRobotDieLeftImages, ADDR IMAGETYPE_PNG
+		invoke UnicodeStr, ADDR  dynamicRobotJumpRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hDynamicRobotJumpRightImage
+		invoke UnicodeStr, ADDR  dynamicRobotJumpLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hDynamicRobotJumpLeftImage
 
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 
@@ -618,7 +624,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 	; keep contra in the view
 	mov background.move_length, 0
-	.if contra.position.pos_x > 250 && contra.move_dx > 0
+	.if contra.position.pos_x > 210 && contra.move_dx > 0
 		mov eax, CONTRA_BASIC_MOV_SPEED
 		sub background.b_offset, eax
 		mov background.move_length, eax	
@@ -689,7 +695,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			.if [esi].Hero.face_direction == DIRECTION_RIGHT
 				mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
 				mov edi, [esi].Hero.action_imageIndex
-				mov eax, hPlayerDieRightImages[edi * TYPE DWORD];
+				mov eax, hStaticRobotDieRightImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
 				.if [esi].Hero.action_imageIndex == 3
@@ -698,7 +704,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			.else
 				mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
 				mov edi, [edi].Hero.action_imageIndex
-				mov eax, hPlayerDieLeftImages[edi * TYPE DWORD];
+				mov eax, hStaticRobotDieLeftImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
 				.if [esi].Hero.action_imageIndex == 3
@@ -727,16 +733,22 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			.endif
 		.endif
 		
-			invoke CollisionBackgroundJudge, esi, addr background
-			invoke CollisionBulletJudge, esi, addr contraBullets
+		invoke CollisionBackgroundJudge, esi, addr background
+		invoke CollisionBulletJudge, esi, addr contraBullets
 
-			.if [esi].Hero.shoot == 1 && [esi].Hero.action != HEROACTION_DIE
-				invoke OpenFire, addr enemyBullets, esi
-			.endif
+		.if [esi].Hero.shoot == 1 && [esi].Hero.action != HEROACTION_DIE
+			invoke OpenFire, addr enemyBullets, esi
+		.endif
 
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-.elseif [esi].Hero.identity == HEROTYPE_STATICROBOT
+.elseif [esi].Hero.identity == HEROTYPE_DYNAMICROBOT
+		mov eax, [esi].Hero.range.position.pos_x
+		.if contra.range.position.pos_x > eax
+			mov [esi].Hero.face_direction, DIRECTION_RIGHT
+		.else
+			mov [esi].Hero.face_direction, DIRECTION_LEFT
+		.endif
 			.if [esi].Hero.action == HEROACTION_JUMP
 				.if [esi].Hero.jump_height < MAX_JUMP_HEIGHT
 					mov [esi].Hero.move_dy, -CONTRA_BASIC_JUMP_SPEED
@@ -745,34 +757,16 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
 				.endif
 				.if [esi].Hero.face_direction == DIRECTION_RIGHT
-					mov edi, [esi].Hero.action_imageIndex
-					mov eax, hPlayerJumpRightImages[edi * TYPE DWORD];
-					mov [esi].Hero.hImage, eax
-					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 4
-						mov [esi].Hero.action_imageIndex, 0
-					.endif
-				.else
-					mov edi, [esi].Hero.action_imageIndex
-					mov eax, hPlayerJumpLeftImages[edi * TYPE DWORD];
-					mov [esi].Hero.hImage, eax
-					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 4
-						mov [esi].Hero.action_imageIndex, 0
-					.endif
-				.endif
-			.elseif [esi].Hero.action == HEROACTION_CRAWL
-				.if [esi].Hero.face_direction == DIRECTION_RIGHT
-					mov eax, hPlayerCrawlRightImage
+					mov eax, hDynamicRobotJumpRightImage;
 					mov [esi].Hero.hImage, eax
 				.else
-					mov eax, hPlayerCrawlLeftImage
+					mov eax, hDynamicRobotJumpLeftImage;
 					mov [esi].Hero.hImage, eax
 				.endif
 			.elseif [esi].Hero.action == HEROACTION_RUN
 				.if [esi].Hero.face_direction == DIRECTION_RIGHT
 					mov edi, [esi].Hero.action_imageIndex
-					mov eax, hPlayerMoveRightImages[edi * TYPE DWORD];
+					mov eax, hDynamicRobotRunRightImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
 					.if [esi].Hero.action_imageIndex == 6
@@ -780,7 +774,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					.endif
 				.else
 					mov edi, [esi].Hero.action_imageIndex
-					mov eax, hPlayerMoveLeftImages[edi * TYPE DWORD];
+					mov eax, hDynamicRobotRunLeftImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
 					.if [esi].Hero.action_imageIndex == 6
@@ -789,14 +783,17 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 				.endif
 			.elseif [esi].Hero.action == HEROACTION_FALL
 				.if [esi].Hero.face_direction == DIRECTION_RIGHT
-					mov eax, hPlayerFallRightImage;
+					mov eax, hDynamicRobotJumpRightImage;
 					mov [esi].Hero.hImage, eax
 				.else
-					mov eax, hPlayerFallLeftImage;
+					mov eax, hDynamicRobotJumpLeftImage;
 					mov [esi].Hero.hImage, eax
 				.endif
 			.else
 			.endif
+			invoke CollisionBackgroundJudge, esi, addr background
+			invoke CollisionBulletJudge, esi, addr contraBullets
+		
 .endif
 		
 		invoke UpdateHeroPosition, esi, background.move_length

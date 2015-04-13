@@ -355,7 +355,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	inc [esi].Events.number
 	add edi, TYPE Event
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 520
