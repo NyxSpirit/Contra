@@ -9,6 +9,40 @@ include contra_api.inc
 .data
 
 .code
+;================================
+CollisionEnemyJudge		PROC hero:PTR Hero,robots:PTR Robots
+	Local	robot:PTR Hero,robotnumber:DWORD,herorect:CollisionRect,c_offset:DWORD,index:DWORD
+	pusha
+	mov esi,hero
+	mov ebx,robots
+	mov	eax,[ebx].Robots.number
+	mov	robotnumber,eax
+
+	.if robotnumber <= 0
+		ret
+	.endif
+
+	lea edi,[ebx].Robots.robots
+	mov	c_offset,TYPE Hero
+
+	mov index,0
+L1:
+	invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Hero.range
+	.if	eax == 1
+		invoke UpdateHeroAction,hero,HEROACTION_DIE 
+	.endif
+	add	edi,c_offset
+	inc index
+	mov	eax,index
+	.if eax >= robotnumber
+		jmp quit
+	.endif
+	jmp L1
+quit:
+	popa
+	ret
+CollisionEnemyJudge		ENDP
+;================================
 
 ;================================
 CollisionBulletJudge	PROC hero:PTR Hero,bullets:PTR Bullets
