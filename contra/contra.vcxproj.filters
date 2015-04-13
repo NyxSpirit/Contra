@@ -13,11 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="main.asm">
-      <Filter>源文件</Filter>
-    </MASM>
+    <Filter Include="源文件\INC">
+      <UniqueIdentifier>{22c4b310-bfde-4c2d-8dc5-dad95856e263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\asm">
+      <UniqueIdentifier>{f05b3e23-0917-42c6-bf5a-63da2fd6dabb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -28,5 +29,21 @@
     <ResourceCompile Include="contra.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="contra.asm">
+      <Filter>源文件\asm</Filter>
+    </MASM>
+    <MASM Include="contra_api.asm">
+      <Filter>源文件\asm</Filter>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="contra.inc">
+      <Filter>源文件\INC</Filter>
+    </None>
+    <None Include="contra_api.inc">
+      <Filter>源文件\INC</Filter>
+    </None>
   </ItemGroup>
 </Project>
