@@ -86,6 +86,10 @@ HEROACTION_DIVE EQU 7
 HEROACTION_FALL EQU 8
 HEROACTION_SWIM EQU 9
 
+CHARACTERTYPE_BLUECONTRA EQU 0
+CHARACTERTYPE_REDCONTRA EQU 1
+CHARACTERTYPE_STATICROBOT EQU 2
+CHARACTERTYPE_ANIMATEROBOT EQU 3
 
 Hero STRUCT
 	position	Position	<>
@@ -112,6 +116,7 @@ Hero STRUCT
 	move_dy		SDWORD 0 
 	
 Hero ENDS
+
 ;=================================
 ALLIANCE_PLAYER EQU 0
 ALLIANCE_ENEMY EQU 1
@@ -128,6 +133,7 @@ Bullet	ENDS
 ;=================================
 ;=================================
 MAX_BULLETS_NUMBER EQU  20
+MAX_ROBOTS_NUMBER EQU 20
 
 Bullets  STRUCT
 	number 		DWORD	0
@@ -135,7 +141,10 @@ Bullets  STRUCT
 	bullets     Bullet  MAX_BULLETS_NUMBER dup (<>)
 Bullets  ENDS
 ;=================================
-
+Robots STRUCT
+	number		DWORD  0
+	robots		Hero   MAX_ROBOTS_NUMBER dup (<>)
+Robots ENDS
 ;=================================
 Ground	STRUCT
 	position	Position	<>
@@ -144,7 +153,9 @@ Ground	STRUCT
 	hImage	DWORD     0
 Ground	ENDS
 ;=================================
-
+TOWERTYPE_CHEST EQU 0
+TOWERTYPE_TANK EQU 1
+TOWERTYPE_MACHINE EQU 2
 ;=================================
 Tower	STRUCT
 	position	Position	<>
@@ -152,11 +163,10 @@ Tower	STRUCT
 	range	CollisionRect	<>
 	hImage	DWORD     0
 	;tower type 0,1,2
-	t_type	DWORD	0	
-	shoot	DWORD	0
-	life	DWORD	0
-	ALIGN	DWORD
-	direction	DWORD	0
+	t_type	DWORD	1	
+	shoot_dx	DWORD	0
+	shoot_dy	DWORD	0
+	life	DWORD	5
 Tower	ENDS
 ;=================================
 
@@ -183,9 +193,28 @@ Background	STRUCT
 Background	ENDS
 ;=================================
 
+EVENTTYPE_NONE EQU 0
+EVENTTYPE_CREATEROBOT EQU 1
+EVENTTYPE_MOVELEFT EQU 2
+EVENTTYPE_MOVERIGHT EQU 3
+EVENTTYPE_SHOOT EQU 4
+
+Event STRUCT
+	position    Position <>
+	e_type	DWORD		0
+	actor   DWORD	 	0
+	clock_limit DWORD   0
+	location_limit DWORD 0
+Event ENDS
+
+Events STRUCT
+	number	DWORD		0
+	events	Event       30  dup (<>)
+	
+Events ENDS
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
-
+CollisionBulletJudge PROTO :PTR Hero, :PTR Bullets
 InitMap			PROTO
 ResetStat		PROTO
 
@@ -195,15 +224,20 @@ ChangeHeroDirection	PROTO :PTR Hero,:DWORD
 ChangeHeroRect  PROTO   :PTR Hero,:PTR	CollisionRect
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
 SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
-CreateHero PROTO :PTR Hero
 UpdateHeroCollisionRect PROTO :PTR Hero
 UpdateHeroPosition PROTO :PTR Hero
 UpdateHeroAction PROTO :PTR Hero, :DWORD
+
+InitContra PROTO :PTR Hero
+CreateRobot PROTO :PTR Robots, :DWORD, :DWORD
+DeleteRobot PROTO :PTR Robots, :DWORD
 
 CreateBullet		PROTO   :PTR Bullets,:PTR Hero, :DWORD
 DeleteBullet        PROTO   :PTR Bullets,:DWORD
 ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
 ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
+
+InitEvents PROTO :PTR Events
 
 ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
 TowerShoot		PROTO	:PTR Tower,:DWORD

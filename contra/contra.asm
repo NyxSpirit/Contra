@@ -76,17 +76,45 @@ CmdShow:DWORD
 	.while TRUE
 
 		invoke ContraTakeAction
-		.if contra.shoot == 1
-			invoke CreateBullet, addr contraBullets, addr contra, hBulletImage
-		.endif
+
+		invoke HandleEvents
+
+		invoke RobotsTakeAction
 		invoke BulletsMove
 
 		invoke InvalidateRect, hWnd, NULL, 1		
 		invoke Sleep, 100
+		inc clock
 	.endw
 	ret
  RunProc ENDP
  
+ HandleEvents PROC
+	local cnt: DWORD
+	mov eax, eventQueue.number
+	mov cnt, eax
+
+	lea esi, eventQueue.events
+	mov eax, [esi].Event.clock_limit
+	.if clock > eax
+		mov eax, 0
+		sub eax, background.b_offset
+		.if eax > [esi].Event.location_limit
+
+		; all satisfied, start executing 
+			.if [esi].Event.e_type == EVENTTYPE_CREATEROBOT
+				invoke CreateRobot, addr robotQueue, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+				
+			.else
+				
+			
+			
+			.endif
+		; end execute
+		.endif
+	.endif
+	ret
+ HandleEvents ENDP
 
  WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
    LOCAL ps:PAINTSTRUCT 
@@ -130,12 +158,24 @@ CmdShow:DWORD
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerFallLeftImage
 		invoke UnicodeStr, ADDR playerDiveFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerDiveImage
-
 		
+		invoke LoadImageSeries, ADDR staticRobotShootRightFiles, 2, addr hStaticRobotShootRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR staticRobotShootRightDownFiles, 2, addr hStaticRobotShootRightDownImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR staticRobotShootRightUpFiles, 2, addr hStaticRobotShootRightUpImages, ADDR IMAGETYPE_PNG
+		
+		invoke LoadImageSeries, ADDR staticRobotShootLeftFiles, 2, addr hStaticRobotShootLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR staticRobotShootLeftDownFiles, 2, addr hStaticRobotShootLeftDownImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR staticRobotShootLeftUpFiles, 2, addr hStaticRobotShootLeftUpImages, ADDR IMAGETYPE_PNG
+
 		invoke UnicodeStr, ADDR bulletFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hBulletImage
 
-		invoke CreateHero, addr contra 
+		; ==========LoadImageResources end
+
+		; ==========init game params
+		invoke InitContra, addr contra 
+		invoke InitEvents, addr eventQueue
+		mov clock, 0
 		
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
@@ -314,22 +354,31 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
  
  PaintObjects PROC, hGraphics:DWORD
     local cnt: DWORD
-	invoke PaintObject, hGraphics, addr contra
+
+		invoke PaintObject, hGraphics, addr contra
 	
 	mov ecx, contraBullets.number
 	mov cnt, ecx
 	.while cnt > 0
 		mov eax, cnt
-		dec eax
-		.if cnt == 2
-			lea ecx, contraBullets.bullets[eax]
-		.endif
+		dec eax 
 		mov bl,TYPE Bullet
 		mul bl
 		invoke PaintObject, hGraphics, addr contraBullets.bullets[eax]
 		dec cnt 
 	.endw
-	
+
+	mov ecx, robotQueue.number
+	mov cnt, ecx
+	.while cnt > 0
+		mov eax, cnt
+		dec eax
+		mov bl, TYPE Hero
+		mul bl
+		invoke PaintObject, hGraphics, addr robotQueue.robots[eax]
+		dec cnt
+	.endw
+
 	ret
  PaintObjects ENDP
  
@@ -372,8 +421,8 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			mov contra.hImage, eax
 			inc contra.action_imageIndex
 			.if contra.action_imageIndex == 7
-				invoke CreateHero, addr contra 
-			.endif
+				invoke InitContra, addr contra 
+			.endif		
 		.else
 			mov contra.move_dx, CONTRA_BASIC_MOV_SPEED
 			mov esi, contra.action_imageIndex
@@ -381,7 +430,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			mov contra.hImage, eax
 			inc contra.action_imageIndex
 			.if contra.action_imageIndex == 7
-				invoke CreateHero, addr contra 
+				invoke InitContra, addr contra 
 			.endif
 		.endif
 	.elseif contra.action == HEROACTION_SWIM
@@ -476,6 +525,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	.endif
 		
 	invoke CollisionBackgroundJudge, addr contra, addr background
+	invoke CollisionBulletJudge, addr contra, addr enemyBullets
 
 	; keep contra in the view
 	.if contra.position.pos_x > 250
@@ -502,11 +552,23 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		dec contra.invincible_time
 	.endif
 
+	.if contra.shoot == 1
+		invoke CreateBullet, addr contraBullets, addr contra, hBulletImage
+	.endif
 
 	; update object positions
 	invoke UpdateHeroPosition, addr contra
+	
 	ret
  ContraTakeAction ENDP
+
+ RobotsTakeAction PROC
+	; examEventQueue
+	; robotturn
+	; robotshoot
+	; 
+	ret
+ RobotsTakeAction ENDP
 
  BulletsMove PROC
 	local cnt: DWORD

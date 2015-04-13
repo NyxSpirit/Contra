@@ -11,6 +11,10 @@ include contra_api.inc
 .code
 
 ;================================
+CollisionBulletJudge	PROC hero:PTR Hero,bullets:PTR Bullets
+	ret
+CollisionBulletJudge    ENDP
+;================================
 CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
@@ -302,13 +306,30 @@ InitMap		PROC
 	
 InitMap ENDP
 
+InitEvents PROC events:PTR Events
+	mov esi, events
+	mov [esi].Events.number, 1
+	
+	mov eax, [esi].Events.number
+	mov bl, TYPE Event
+	mul bl
+	lea edi, [esi].Events.events[eax]
+
+	mov [edi].Event.e_type, EVENTTYPE_CREATEROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 0
+	
+	ret
+	
+InitEvents ENDP
 ;=================================
 ResetStat	PROC
 
 ResetStat ENDP
 
 ;===================================
-CreateHero PROC hero:PTR Hero
+InitContra PROC hero:PTR Hero
 	mov esi, hero
 	mov [esi].Hero.position.pos_x, 0
 	mov [esi].Hero.position.pos_y, 0
@@ -325,8 +346,40 @@ CreateHero PROC hero:PTR Hero
 	mov [esi].Hero.jump_height, MAX_JUMP_HEIGHT
 	invoke UpdateHeroCollisionRect, hero
 	ret
-CreateHero ENDP
+InitContra ENDP
 
+;==================================
+CreateRobot PROC robots:PTR Robots, posx:DWORD, posy:DWORD
+	local cnt:DWORD
+
+	mov esi, robots
+	mov eax, [esi].Robots.number
+	inc [esi].Robots.number
+	mov bl, TYPE Hero
+	mul bl
+	lea esi, [esi].Robots.robots[eax]
+	
+	mov [esi].Hero.position.pos_x, 400
+	mov [esi].Hero.position.pos_y, 400
+	mov [esi].Hero.action, HEROACTION_STAND
+	mov [esi].Hero.move_dx, 0
+	mov [esi].Hero.move_dy, 0
+	mov [esi].Hero.invincible_time, 0
+	mov [esi].Hero.shoot, 0
+	mov [esi].Hero.face_direction, DIRECTION_LEFT
+	mov [esi].Hero.shoot_dx, -BULLET_SPEED
+	mov [esi].Hero.shoot_dy, 0
+	;mov [esi].Hero.weapon, <>
+	mov [esi].Hero.action_imageIndex, 0
+	mov [esi].Hero.jump_height, 0
+	mov [esi].Hero.life, 1
+	invoke UpdateHeroCollisionRect, esi
+	ret
+CreateRobot ENDP
+;=================================
+DeleteRobot PROC	robots:PTR Robots, index :DWORD
+	ret
+DeleteRobot	ENDP
 ;=================================
 ;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
 TakeAction		PROC	hero:PTR Hero,command:DWORD
@@ -375,7 +428,6 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 			.endif
 			.if formerAction == HEROACTION_CRAWL
 				mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
-				add [esi].Hero.position.pos_y, 20 
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
@@ -423,11 +475,14 @@ TakeAction ENDP
 UpdateHeroAction PROC hero:PTR Hero, newAction: DWORD
 	mov eax, newAction
 	.if eax != [esi].Hero.action
-	
+		.if newAction == HEROACTION_FALL
+			add [esi].Hero.position.pos_y, 32
+		.endif
 		mov [esi].Hero.action, eax
 		mov [esi].Hero.action_imageIndex, 0
 		invoke UpdateHeroCollisionRect, hero
 		mov [esi].Hero.jump_height, 0
+
 	.endif
 
 	ret
@@ -474,7 +529,6 @@ BridgeBomb	ENDP
 ChangeTowerDirection	PROC	tower:PTR Tower,direction:DWORD
 	mov		esi,tower
 	mov		eax,direction
-	mov		[esi].Tower.direction,eax
 	ret	
 ChangeTowerDirection	ENDP
 ;==================================
@@ -484,7 +538,6 @@ ChangeTowerDirection	ENDP
 TowerShoot		PROC		tower:PTR Tower,cmd:DWORD
 	mov		esi,tower
 	mov		eax,cmd
-	mov		[esi].Tower.shoot,eax
 
 	ret
 TowerShoot		ENDP
@@ -560,7 +613,7 @@ CreateBullet  PROC bullets:PTR Bullets,hero:PTR Hero, hImage: DWORD
 	mov shootOffsetY, eax
 
 	; shoot from the middle of collision rect
-	;				plus basic speed vector * 2
+	;				plus basic speed vector 
 	mov eax, [edi].Hero.range.r_width
 	shr eax, 1
 	add eax, [edi].Hero.range.position.pos_x
@@ -582,6 +635,9 @@ CreateBullet  PROC bullets:PTR Bullets,hero:PTR Hero, hImage: DWORD
 	mov [esi].Bullet.hImage, eax 
 	ret
 CreateBullet  ENDP
+
+;==================================
+
 ;==================================
 DeleteBullet  PROC bullets:PTR Bullets,index:DWORD
 	local num : DWORD

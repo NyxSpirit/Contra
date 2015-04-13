@@ -12,7 +12,9 @@ PaintBackground PROTO :DWORD
 PaintObjects PROTO :DWORD
 PaintObject PROTO :DWORD, :DWORD
 
+HandleEvents PROTO
 ContraTakeAction PROTO
+RobotsTakeAction PROTO
 BulletsMove PROTO
 
 DISPLAY_SCALE EQU 2
@@ -45,6 +47,14 @@ IDR_WAVE1 EQU 104
  playerDiveFile db "Res\\player\\player_dive.png", 0
 
  bulletFile  db "Res\\bullet\\player_dive.png", 0
+ towerFile db "Res\\bullet\\tower1.png", 0
+ 
+ staticRobotShootRightFiles db "Res\\npc\\npc1_right", 0
+ staticRobotShootRightDownFiles db "Res\\npc\\npc1_rightdown", 0
+ staticRobotShootRightUpFiles db "Res\\npc\\npc1_rightup", 0
+ staticRobotShootLeftFiles db "Res\\npc\\npc1_left", 0
+ staticRobotShootLeftDownFiles db "Res\\npc\\npc1_leftdown", 0
+ staticRobotShootLeftUpFiles db "Res\\npc\\npc1_leftup", 0
 ;============================== Window Params =========
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
@@ -54,7 +64,12 @@ IDR_WAVE1 EQU 104
  contra Hero <<0,100>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0,0>
  background Background <>
  contraBullets Bullets <>
- npcBullets Bullets <>
+ enemyBullets Bullets <>
+ robotQueue Robots <>
+
+ eventQueue Events <>
+ 
+ clock		DWORD	0
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
@@ -78,6 +93,12 @@ IDR_WAVE1 EQU 104
  hPlayerDieRightImages dd 7 dup (?)
  hPlayerDieLeftImages dd 7 dup (?)
 
+ hStaticRobotShootRightImages dd 2 dup (?)
+ hStaticRobotShootRightUpImages dd 2 dup (?)
+ hStaticRobotShootRightDownImages dd 2 dup (?)
+ hStaticRobotShootLeftImages dd 2 dup (?)
+ hStaticRobotShootLeftUpImages dd 2 dup (?)
+ hStaticRobotShootLeftDownImages dd 2 dup (?)
  hBulletImage dd ?
  hMusic dd ?
 
