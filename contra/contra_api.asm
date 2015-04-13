@@ -769,16 +769,12 @@ CreateBullet PROC USES esi edi,
 	shr eax, 1
 	add eax, [edi].Hero.range.position.pos_x
 	add eax, shootOffsetX
-	add	eax,	64
-	.if	[esi].Hero.face_direction == DIRECTION_RIGHT
-		sub	eax,80
-	.endif
+	add	eax,	15
 	mov [esi].Bullet.position.pos_x, eax
 	mov [esi].Bullet.range.position.pos_x, eax
 
 	mov eax, [edi].Hero.range.r_height
 	shr eax, 1
-	sub eax, 15
 	add eax, [edi].Hero.range.position.pos_y
 	add eax, shootOffsetY
 	mov [esi].Bullet.position.pos_y, eax
