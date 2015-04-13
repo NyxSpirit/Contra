@@ -637,28 +637,28 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 .if [esi].Hero.identity == HEROTYPE_STATICROBOT
 
 		; turn to contra
-		mov eax, [esi].Hero.position.pos_x
-		add eax, 80
-		mov ebx, [esi].Hero.position.pos_x
-		sub ebx, 80
-		.if contra.position.pos_x > eax
+		mov eax, [esi].Hero.range.position.pos_x
+		add eax, 40
+		mov ebx, [esi].Hero.range.position.pos_x
+		sub ebx, 40
+		.if contra.range.position.pos_x > eax
 			mov [esi].Hero.face_direction, DIRECTION_RIGHT
 			mov [esi].Hero.shoot_dx, 1
-		.elseif contra.position.pos_x < ebx
+		.elseif contra.range.position.pos_x < ebx
 			mov [esi].Hero.face_direction, DIRECTION_LEFT
 			mov [esi].Hero.shoot_dx, -1
 		.else
 			mov [esi].Hero.shoot_dx, 0
 		.endif
 
-		mov eax, [esi].Hero.position.pos_y
+		mov eax, [esi].Hero.range.position.pos_y
 		add eax, 80
-		mov ebx, [esi].Hero.position.pos_y
+		mov ebx, [esi].Hero.range.position.pos_y
 		sub ebx, 80
 
-		.if contra.position.pos_y > eax
+		.if contra.range.position.pos_y > eax
 			mov [esi].Hero.shoot_dy, 1
-		.elseif contra.position.pos_y < ebx
+		.elseif contra.range.position.pos_y < ebx
 			mov [esi].Hero.shoot_dy, -1
 		.else
 			.if [esi].Hero.shoot_dx == 0
