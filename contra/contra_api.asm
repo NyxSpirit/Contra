@@ -90,7 +90,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		eax,position
 	mov		bl,[ecx].Background.b_array[eax]
 
-	.if		ebx >= 400 && bl == 0
+	.if		ebx >= 410 && bl == 0
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
 			mov	[esi].Hero.position.pos_y,350
 			mov	[esi].Hero.move_dx,0
@@ -206,7 +206,7 @@ CollisionJudge PROC USES esi ebx,
 			.if	ecx < edx
 				mov	ebx,r2_y
 				sub	ebx,r1_y
-				.if	ebx <r2_height
+				.if	ebx <r1_height
 					mov	eax,1
 					ret
 				.else
@@ -216,7 +216,7 @@ CollisionJudge PROC USES esi ebx,
 			.else
 				mov ebx,r1_y
 				sub ebx,r2_y
-				.if	ebx <r1_height
+				.if	ebx <r2_height
 					mov eax,1
 					ret
 				.else
@@ -385,7 +385,7 @@ ResetStat ENDP
 InitContra PROC USES esi,
 	 hero:PTR Hero
 	mov esi, hero
-	mov [esi].Hero.position.pos_x, 0
+	mov [esi].Hero.position.pos_x, -2
 	mov [esi].Hero.position.pos_y, 0
 	mov [esi].Hero.action, HEROACTION_JUMP
 	mov [esi].Hero.move_dx, 0
@@ -798,6 +798,7 @@ CreateBullet PROC USES esi edi,
 	shr eax, 1
 	add eax, [edi].Hero.range.position.pos_x
 	add eax, shootOffsetX
+	add	eax,	15
 	mov [esi].Bullet.position.pos_x, eax
 	mov [esi].Bullet.range.position.pos_x, eax
 
@@ -869,7 +870,7 @@ UpdateHeroCollisionRect PROC USES esi,
 	local rect: CollisionRect
 	mov esi, hero
 	.if [esi].Hero.action == HEROACTION_RUN
-		mov rect.r_width,  40
+		mov rect.r_width,  30
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -879,7 +880,7 @@ UpdateHeroCollisionRect PROC USES esi,
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_STAND
-		mov rect.r_width,  40
+		mov rect.r_width,  30
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -889,7 +890,7 @@ UpdateHeroCollisionRect PROC USES esi,
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_JUMP
-		mov rect.r_width,  40
+		mov rect.r_width,  30
 		mov rect.r_height, 68
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -899,7 +900,7 @@ UpdateHeroCollisionRect PROC USES esi,
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_FALL
-		mov rect.r_width,  40
+		mov rect.r_width,  30
 		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
@@ -929,7 +930,7 @@ UpdateHeroCollisionRect PROC USES esi,
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_SWIM
-		mov rect.r_width,  40
+		mov rect.r_width,  30
 		mov rect.r_height, 30
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
