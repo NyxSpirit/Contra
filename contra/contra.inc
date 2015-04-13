@@ -47,8 +47,8 @@ IDR_WAVE1 EQU 104
  playerFallLeftFile db "Res\\player\\player_fall_left.png", 0
  playerDiveFile db "Res\\player\\player_dive.png", 0
 
- bulletFile  db "Res\\bullet\\player_dive.png", 0
- towerFile db "Res\\bullet\\tower1.png", 0
+ bulletFiles  db "Res\\bullet\\bullet", 0
+ towerFile db "Res\\npc\\tower1.png", 0
  
  staticRobotShootRightFiles db "Res\\npc\\npc1_right", 0
  staticRobotShootRightDownFiles db "Res\\npc\\npc1_rightdown", 0
@@ -99,7 +99,11 @@ IDR_WAVE1 EQU 104
  hStaticRobotShootLeftImages dd 2 dup (?)
  hStaticRobotShootLeftUpImages dd 2 dup (?)
  hStaticRobotShootLeftDownImages dd 2 dup (?)
- hBulletImage dd ?
+ hStaticRobotDieLeftImages dd 2 dup (?)
+ hStaticRobotDieRightImages dd 2 dup (?)
+
+ hBulletImages dd 4 dup (?)
+
  hMusic dd ?
 
  ;==============  Thread Handles

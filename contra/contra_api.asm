@@ -315,11 +315,11 @@ InitEvents PROC USES esi edi,events:PTR Events
 	lea edi, [esi].Events.events
 
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATEROBOT
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 0
-	mov [edi].Event.position.pos_x, 400
+	mov [edi].Event.location_limit, 120
+	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 200
 	inc [esi].Events.number
 	add edi, TYPE Event
@@ -355,7 +355,7 @@ InitContra ENDP
 
 ;==================================
 CreateRobot PROC USES esi,
-	robots:PTR Robots, posx:DWORD, posy:DWORD
+	robots:PTR Robots, r_type:BYTE, posx:DWORD, posy:DWORD
 	local cnt:DWORD
 
 	mov esi, robots
@@ -369,6 +369,8 @@ CreateRobot PROC USES esi,
 	mov [esi].Hero.position.pos_x, eax
 	mov eax, posy
 	mov [esi].Hero.position.pos_y, eax
+	mov al, r_type
+	mov [esi].Hero.identity, al
 	mov [esi].Hero.action, HEROACTION_STAND
 	mov [esi].Hero.move_dx, 0
 	mov [esi].Hero.move_dy, 0
@@ -377,7 +379,6 @@ CreateRobot PROC USES esi,
 	mov [esi].Hero.face_direction, DIRECTION_LEFT
 	mov [esi].Hero.shoot_dx, -BULLET_SPEED
 	mov [esi].Hero.shoot_dy, 0
-	;mov [esi].Hero.weapon, <>
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, 0
 	mov [esi].Hero.life, 1
@@ -604,15 +605,15 @@ SetWeapon	PROC	USES esi,
 	mov		esi,hero
 	lea		esi, [esi].Hero.weapon
 	.if w_type == WEAPONTYPE_B
-		mov		[esi].Weapon.shot_interval_time, 3
+		mov		[esi].Weapon.shot_interval_time, 2
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      0
 	.elseif w_type == WEAPONTYPE_ROBOT
-		mov		[esi].Weapon.shot_interval_time, 8
+		mov		[esi].Weapon.shot_interval_time, 5
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      0
 	.elseif w_type == WEAPONTYPE_S
-		mov		[esi].Weapon.shot_interval_time, 3
+		mov		[esi].Weapon.shot_interval_time, 2
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      1
 	.else
