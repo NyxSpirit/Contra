@@ -18,7 +18,7 @@ CollisionBulletJudge    ENDP
 CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
-			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,fall_speed:DWORD
+			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,fall_speed:DWORD,divisor:DWORD
 	;0:air,1:water,2:ground,3:bridge
 	
 	mov		esi,hero
@@ -29,19 +29,20 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
 	mov		fall_speed,CONTRA_BASIC_JUMP_SPEED
 	
-	mov		eax,[esi].Hero.range.position.pos_x
-	add		eax,32	;half of image width
+	mov		edx,0
+	mov		eax,[esi].Hero.range.r_width
+	mov		divisor,2
+	div		divisor
+	add		eax,[esi].Hero.range.position.pos_x	;half of image width
+
 	mov		ebx,[esi].Hero.range.position.pos_y
-	add		ebx,96	;contra image height
+	add		ebx,[esi].Hero.range.r_height	;contra image height
 	mov		ecx,background	
 
 	;down block
 	mov		edx,0
 	sub		eax,[ecx].Background.b_offset
 	div		img_width
-	.if	edx	> 0
-		;inc		eax
-	.endif
 	mov		x,eax
 
 	mov		edx,0
@@ -58,7 +59,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		eax,position
 	mov		bl,[ecx].Background.b_array[eax]
 
-	.if		ebx >= 500 && bl == 0
+	.if		ebx >= 448 && bl == 0
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
 			mov	[esi].Hero.move_dx,0
 			mov	[esi].Hero.move_dy,0
@@ -82,6 +83,10 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	.elseif	bl == BGTYPE_GROUND	
 		.if	[esi].Hero.move_dy > 0
 			invoke UpdateHeroAction, hero, HEROACTION_STAND
+			mov	eax,img_height
+			mul	y
+			sub eax,95
+			mov	[esi].Hero.position.pos_y,eax
 			mov	[esi].Hero.move_dy,0
 			ret
 		.endif
@@ -100,9 +105,30 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	.if	bl == BGTYPE_WATER			
 			invoke UpdateHeroAction, hero, HEROACTION_SWIM	
 			mov	[esi].Hero.move_dy,0				
-	.elseif bl == BGTYPE_GROUND						
-			;invoke UpdateHeroAction, hero,HEROACTION_STAND
-			;mov	[esi].Hero.move_dy,-20
+	.endif
+
+	mov		ecx,background
+	mov		eax,position
+	sub		eax,BACKGROUNDTOTALWIDTH
+	add		eax,1
+	mov		bl,[ecx].Background.b_array[eax]
+	sub		eax,2
+	mov		cl,[ecx].Background.b_array[eax]
+	.if	[esi].Hero.action == HEROACTION_SWIM
+		.if	[esi].Hero.move_dx > 0
+			.if	bl == BGTYPE_GROUND
+				add	[esi].Hero.position.pos_y,-25
+				add	[esi].Hero.position.pos_x,15
+				invoke UpdateHeroAction, hero, HEROACTION_STAND					
+			.endif
+		.elseif	[esi].Hero.move_dx < 0
+			.if	cl == BGTYPE_GROUND
+				add	[esi].Hero.position.pos_y,-25
+				add	[esi].Hero.position.pos_x,-15
+				invoke UpdateHeroAction, hero, HEROACTION_STAND
+			.endif
+		.else
+		.endif
 	.endif
 	ret
 CollisionBackgroundJudge	ENDP
@@ -239,7 +265,7 @@ InitMap		PROC	USES esi,
 	invoke FillMap, background, 10, 9, 9, BGTYPE_GROUND
 	invoke FillMap, background, 12, 10, 11, BGTYPE_GROUND
 	invoke FillMap, background, 10, 12, 12, BGTYPE_GROUND
-	invoke FillMap, background, 10, 14, 15, BGTYPE_GROUND
+	invoke FillMap, background, 8, 14, 15, BGTYPE_GROUND
 	invoke FillMap, background, 6, 16, 30, BGTYPE_GROUND
 	invoke FillMap, background, 12, 20, 21, BGTYPE_GROUND
 	invoke FillMap, background, 9, 21, 23, BGTYPE_GROUND
@@ -540,7 +566,9 @@ UpdateHeroAction PROC USES esi,
 	mov eax, newAction
 	.if eax != [esi].Hero.action
 		.if newAction == HEROACTION_FALL
-			add [esi].Hero.position.pos_y, 12
+			.if	[esi].Hero.action == HEROACTION_CRAWL
+				add [esi].Hero.position.pos_y, 32
+			.endif
 		.endif
 		mov [esi].Hero.action, eax
 		mov [esi].Hero.action_imageIndex, 0
@@ -768,83 +796,83 @@ UpdateHeroCollisionRect PROC USES esi,
 	local rect: CollisionRect
 	mov esi, hero
 	.if [esi].Hero.action == HEROACTION_RUN
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  40
+		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          30
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_STAND
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  40
+		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          30
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_JUMP
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  40
+		mov rect.r_height, 68
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          32
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_FALL
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  40
+		mov rect.r_height, 70
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          30
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_DIE
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  70
+		mov rect.r_height, 20
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          0
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          80
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_DIVE
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  0
+		mov rect.r_height, 0
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          80
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_SWIM
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  40
+		mov rect.r_height, 30
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          20
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          70
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_CRAWL
-		mov rect.r_width,  30
-		mov rect.r_height, 40
+		mov rect.r_width,  70
+		mov rect.r_height, 20
 		mov eax, [esi].Hero.position.pos_x
-		add eax,          10
+		add eax,          0
 		mov rect.position.pos_x, eax
 		mov eax, [esi].Hero.position.pos_y
-		add eax,          10
+		add eax,          80
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
 	.else
