@@ -227,7 +227,7 @@ FillMap ENDP
 
 InitMap		PROC	background:PTR Background
 	mov esi,background
-	;mov	[esi].Background.b_offset,-32
+	mov	[esi].Background.b_offset,-32
 	invoke FillMap, background, 12, 1, 56, BGTYPE_WATER
 	invoke FillMap, background, 6, 2, 15, BGTYPE_GROUND
 	invoke FillMap, background, 8, 6, 8, BGTYPE_GROUND

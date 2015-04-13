@@ -136,7 +136,9 @@ CmdShow:DWORD
 		invoke GdipLoadImageFromFile, addr buffer, addr hBulletImage
 
 		invoke CreateHero, addr contra 
-		
+
+		invoke InitMap,addr background
+
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
 		
@@ -360,7 +362,6 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke GdipGetImageHeight, hBackgroundImage, addr imageHeight
 	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, imageWidth , imageHeight
 
-	invoke InitMap,addr background
 	ret
  PaintBackground ENDP
 
