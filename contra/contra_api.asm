@@ -346,7 +346,6 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov esi, events
 	lea edi, [esi].Events.events
 
-
 	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
@@ -359,20 +358,13 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 60
+	mov [edi].Event.location_limit, 520
 	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 0
 	inc [esi].Events.number
 	add edi, TYPE Event
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
-	mov [edi].Event.actor, 0
-	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 50
-	mov [edi].Event.position.pos_x, 530
-	mov [edi].Event.position.pos_y, 0
-	inc [esi].Events.number
-	add edi, TYPE Event
+	
 	ret
 	
 InitEvents ENDP
@@ -408,7 +400,7 @@ CreateRobot PROC USES esi,
 	robots:PTR Robots, r_type:BYTE, posx:DWORD, posy:DWORD
 	local cnt:DWORD
 
-	mov esi, robots
+ 	mov esi, robots
 	mov eax, [esi].Robots.number
 	inc [esi].Robots.number
 	mov bl, TYPE Hero
@@ -637,7 +629,7 @@ UpdateHeroAction PROC USES esi,
 		.endif
 		.if newAction == HEROACTION_STAND
 			.if [esi].Hero.move_dx != 0
-				mov newAction, HEROACTION_RUN
+				mov eax, HEROACTION_RUN
 			.endif
 		.endif
 		mov [esi].Hero.action, eax

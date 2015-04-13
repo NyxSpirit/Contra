@@ -117,9 +117,9 @@ CmdShow:DWORD
 					mov ebx, clock
 					mov startTime, ebx
 					add startTime, ROBOT_SHOOT_INTERVAL
-					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSHOOT, newRobot, startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					;invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSHOOT, newRobot, startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					add startTime, ROBOT_SHOOT_LASTTIME
-					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, newRobot,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					;invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, newRobot,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 
 				.elseif [esi].Event.e_type == EVENTTYPE_ROBOTSHOOT
 					;invoke RobotShoot, 
@@ -638,6 +638,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	mov index, ecx
 	lea esi, robotQueue.robots
 	
+	.while TRUE
 	.if index == 0
 		jmp @f
 	.else
@@ -802,6 +803,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	
 		add esi, TYPE Hero
 	.endif
+	.endw
 @@:
 
 	ret
