@@ -12,6 +12,37 @@ include contra_api.inc
 
 ;================================
 CollisionBulletJudge	PROC hero:PTR Hero,bullets:PTR Bullets
+	Local	bullet:PTR Bullet,bulletnumber:DWORD,herorect:CollisionRect,c_offset:DWORD,index:DWORD
+	
+	pusha
+	mov esi,hero
+	mov	ebx,bullets
+	mov	eax,[ebx].Bullets.number
+	mov	bulletnumber,eax
+	
+	.if	bulletnumber <= 0
+		ret
+	.endif
+	
+	lea	edi,[ebx].Bullets.bullets
+	mov	c_offset,TYPE Bullet
+
+	mov index,0
+L1:
+	invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Bullet.range
+	.if	eax == 1
+		invoke UpdateHeroAction,hero,HEROACTION_DIE 
+		invoke DeleteBullet,bullets,index
+	.endif
+	add	edi,c_offset
+	inc index
+	mov	eax,index
+	.if eax >= bulletnumber
+		jmp quit
+	.endif
+	jmp L1
+quit:
+	popa
 	ret
 CollisionBulletJudge    ENDP
 ;================================
@@ -59,8 +90,9 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		eax,position
 	mov		bl,[ecx].Background.b_array[eax]
 
-	.if		ebx >= 448 && bl == 0
+	.if		ebx >= 400 && bl == 0
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
+			mov	[esi].Hero.position.pos_y,350
 			mov	[esi].Hero.move_dx,0
 			mov	[esi].Hero.move_dy,0
 			ret
@@ -393,6 +425,7 @@ CreateRobot ENDP
 DeleteRobot PROC	USES esi ebx edi,
 	robots:PTR Robots,index:DWORD
 	local num : DWORD
+	
 	mov esi, robots
 
 	mov eax, [esi].Robots.number

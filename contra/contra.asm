@@ -697,7 +697,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		.endif
 		
 			invoke CollisionBackgroundJudge, esi, addr background
-			invoke CollisionBulletJudge, esi, addr enemyBullets
+			invoke CollisionBulletJudge, esi, addr contraBullets
 
 			.if [esi].Hero.shoot == 1 && [esi].Hero.action != HEROACTION_DIE
 				invoke OpenFire, addr enemyBullets, esi
@@ -809,8 +809,10 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 		mov eax, contraBullets.bullets[esi].move_dx
 		add contraBullets.bullets[esi].position.pos_x, eax
+		add contraBullets.bullets[esi].range.position.pos_x, eax
 		mov eax, contraBullets.bullets[esi].move_dy
 		add contraBullets.bullets[esi].position.pos_y, eax
+		add contraBullets.bullets[esi].range.position.pos_y, eax
 
 		mov eax, contraBullets.bullets[esi].position.pos_x
 		mov ebx, contraBullets.bullets[esi].position.pos_y
@@ -832,8 +834,10 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 		mov eax, enemyBullets.bullets[esi].move_dx
 		add enemyBullets.bullets[esi].position.pos_x, eax
+		add enemyBullets.bullets[esi].range.position.pos_x, eax
 		mov eax, enemyBullets.bullets[esi].move_dy
 		add enemyBullets.bullets[esi].position.pos_y, eax
+		add enemyBullets.bullets[esi].range.position.pos_y, eax
 
 		mov eax, enemyBullets.bullets[esi].position.pos_x
 		mov ebx, enemyBullets.bullets[esi].position.pos_y
