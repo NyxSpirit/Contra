@@ -125,6 +125,7 @@ CmdShow:DWORD
 					;invoke RobotShoot, 
 					mov edi, [esi].Event.actor
 					mov [edi].Hero.shoot, 1
+					mov [edi].Hero.weapon.time_to_next_shot, 0
 					mov ebx, clock
 					mov startTime, ebx
 					add startTime, ROBOT_SHOOT_INTERVAL
@@ -204,6 +205,11 @@ CmdShow:DWORD
 		invoke LoadImageSeries, ADDR staticRobotShootLeftDownFiles, 2, addr hStaticRobotShootLeftDownImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR staticRobotShootLeftUpFiles, 2, addr hStaticRobotShootLeftUpImages, ADDR IMAGETYPE_PNG
 		
+		invoke LoadImageSeries, ADDR dynamicRobotRunRightFiles, 5, addr hDynamicRobotRunRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR dynamicRobotDieRightFiles, 5, addr hDynamicRobotDieRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR dynamicRobotRunLeftFiles, 5, addr hDynamicRobotRunLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR dynamicRobotDieLeftFiles, 5, addr hDynamicRobotDieLeftImages, ADDR IMAGETYPE_PNG
+
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 
 		; ==========LoadImageResources end
@@ -256,25 +262,32 @@ CmdShow:DWORD
 		
 		.if keyState[VK_J] >= 128
 			.if keyState[VK_W] >= 128
-				mov contra.shoot_dy, -BULLET_SPEED
+				mov contra.shoot_dy, -1
 			.elseif keyState[VK_S] >= 128
-				mov contra.shoot_dy, BULLET_SPEED
+				mov contra.shoot_dy, 1
 			.else
 				mov contra.shoot_dy, 0
 			.endif
 			.if keyState[VK_D] >= 128
-				mov contra.shoot_dx, BULLET_SPEED
+				mov contra.shoot_dx, 1
 			.elseif keyState[VK_A] >= 128
-				mov contra.shoot_dx, -BULLET_SPEED
+				mov contra.shoot_dx, -1
 			.elseif contra.shoot_dy == 0
 				.if contra.face_direction == DIRECTION_RIGHT
-					mov contra.shoot_dx, BULLET_SPEED
+					mov contra.shoot_dx, 1
 				.else 
-					mov contra.shoot_dx, -BULLET_SPEED
+					mov contra.shoot_dx, -1
 				.endif
 			.else
 				mov contra.shoot_dx, 0
 			.endif 
+			mov ebx, contra.weapon.bullet_speed
+			mov eax, contra.shoot_dx
+			imul bl
+			mov contra.shoot_dx, eax
+			mov eax, contra.shoot_dy
+			imul bl
+			mov contra.shoot_dy, eax
 			invoke TakeAction, addr contra, CMD_SHOOT
 		.endif
 	.elseif uMsg == WM_KEYUP
@@ -630,10 +643,10 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		sub ebx, 80
 		.if contra.position.pos_x > eax
 			mov [esi].Hero.face_direction, DIRECTION_RIGHT
-			mov [esi].Hero.shoot_dx, BULLET_SPEED
+			mov [esi].Hero.shoot_dx, 1
 		.elseif contra.position.pos_x < ebx
 			mov [esi].Hero.face_direction, DIRECTION_LEFT
-			mov [esi].Hero.shoot_dx, -BULLET_SPEED
+			mov [esi].Hero.shoot_dx, -1
 		.else
 			mov [esi].Hero.shoot_dx, 0
 		.endif
@@ -644,15 +657,22 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		sub ebx, 80
 
 		.if contra.position.pos_y > eax
-			mov [esi].Hero.shoot_dy, BULLET_SPEED
+			mov [esi].Hero.shoot_dy, 1
 		.elseif contra.position.pos_y < ebx
-			mov [esi].Hero.shoot_dy, -BULLET_SPEED
+			mov [esi].Hero.shoot_dy, -1
 		.else
 			.if [esi].Hero.shoot_dx == 0
-				mov [esi].Hero.shoot_dx, BULLET_SPEED
+				mov [esi].Hero.shoot_dx, 1
 			.endif
 				mov [esi].Hero.shoot_dy, 0
 		.endif
+ 		mov ebx, [esi].Hero.weapon.bullet_speed
+		mov eax, [esi].Hero.shoot_dx
+		imul bl
+		mov [esi].Hero.shoot_dx, eax
+		mov eax, [esi].Hero.shoot_dy
+		imul bl
+		mov [esi].Hero.shoot_dy, eax
 
 		.if [esi].Hero.action == HEROACTION_DIE
 			.if [esi].Hero.face_direction == DIRECTION_RIGHT
@@ -809,6 +829,8 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 		mov eax, contraBullets.bullets[esi].move_dx
 		add contraBullets.bullets[esi].position.pos_x, eax
+		mov eax, background.move_length
+		sub contraBullets.bullets[esi].position.pos_x, eax
 		mov eax, contraBullets.bullets[esi].move_dy
 		add contraBullets.bullets[esi].position.pos_y, eax
 
@@ -832,6 +854,8 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 		mov eax, enemyBullets.bullets[esi].move_dx
 		add enemyBullets.bullets[esi].position.pos_x, eax
+		mov eax, background.move_length
+		sub enemyBullets.bullets[esi].position.pos_x, eax
 		mov eax, enemyBullets.bullets[esi].move_dy
 		add enemyBullets.bullets[esi].position.pos_y, eax
 

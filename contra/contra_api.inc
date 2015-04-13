@@ -15,7 +15,6 @@ CONTRA_INVINCIBLE_TIME EQU 17
 
 CONTRA_BULLET_INTERVAL EQU 2
 
-BULLET_SPEED EQU 25
 
 CMD_MOVERIGHT EQU 1
 CMD_MOVELEFT EQU 2
@@ -80,6 +79,7 @@ Weapon	STRUCT
 	;hImage				  DWORD   0
 	time_to_next_shot     DWORD   0
 	triple_bullet		  DWORD   0
+	bullet_speed          DWORD   0
 Weapon	ENDS
 ;=================================
 

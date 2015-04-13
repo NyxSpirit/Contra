@@ -344,9 +344,10 @@ InitContra PROC USES esi,
 	mov [esi].Hero.invincible_time, CONTRA_INVINCIBLE_TIME
 	mov [esi].Hero.shoot, 0
 	mov [esi].Hero.face_direction, DIRECTION_RIGHT
-	mov [esi].Hero.shoot_dx, BULLET_SPEED
-	mov [esi].Hero.shoot_dy, 0
-	;mov [esi].Hero.weapon, <>
+	invoke SetWeapon, esi, WEAPONTYPE_B
+	mov eax, [esi].Hero.weapon.bullet_speed
+	mov [esi].Hero.shoot_dx, eax
+	mov [esi].Hero.shoot_dy, 0 
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, MAX_JUMP_HEIGHT
 	invoke UpdateHeroCollisionRect, hero
@@ -377,13 +378,13 @@ CreateRobot PROC USES esi,
 	mov [esi].Hero.invincible_time, 0
 	mov [esi].Hero.shoot, 0
 	mov [esi].Hero.face_direction, DIRECTION_LEFT
-	mov [esi].Hero.shoot_dx, -BULLET_SPEED
+	invoke SetWeapon, esi, WEAPONTYPE_ROBOT
+	mov [esi].Hero.shoot_dx, 0
 	mov [esi].Hero.shoot_dy, 0
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, 0
 	mov [esi].Hero.life, 1
 
-	invoke SetWeapon, esi, WEAPONTYPE_ROBOT
 	invoke UpdateHeroCollisionRect, esi
 
 	mov eax, esi
@@ -517,7 +518,7 @@ TakeAction	PROC		USES esi,
 			.if (formerAction ==HEROACTION_RUN)
 				mov newAction, HEROACTION_JUMP
 			.endif
-			.if formerAction == HEROACTION_CRAWL
+			.if formerAction == HEROACTION_CRAWL && [esi].Hero.position.pos_y < 340
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
@@ -529,19 +530,25 @@ TakeAction	PROC		USES esi,
 	.elseif command == CMD_UP
 	.elseif command == CMD_SHOOT
 			.if formerAction == HEROACTION_RUN || formerAction == HEROACTION_STAND
-				
+				mov [esi].Hero.weapon.time_to_next_shot, 0
 				mov [esi].Hero.shoot, 1
 			.elseif formerAction == HEROACTION_JUMP || formerAction == HEROACTION_FALL
+				mov [esi].Hero.weapon.time_to_next_shot, 0
 				mov [esi].Hero.shoot, 1
 			.elseif formerAction == HEROACTION_CRAWL
 				mov [esi].Hero.shoot_dy, 0
 				.if [esi].Hero.face_direction == DIRECTION_RIGHT
-					mov [esi].Hero.shoot_dx, BULLET_SPEED
+					mov eax, [esi].Hero.weapon.bullet_speed
+					mov [esi].Hero.shoot_dx, eax
 				.else 
-					mov [esi].Hero.shoot_dx, -BULLET_SPEED
+					mov eax, 0
+					sub eax, [esi].Hero.weapon.bullet_speed
+					mov [esi].Hero.shoot_dx, eax
 				.endif
+				mov [esi].Hero.weapon.time_to_next_shot, 0
 				mov [esi].Hero.shoot, 1
 			.elseif formerAction == HEROACTION_SWIM
+				mov [esi].Hero.weapon.time_to_next_shot, 0
 				mov [esi].Hero.shoot, 1
 			.endif
 
@@ -608,14 +615,17 @@ SetWeapon	PROC	USES esi,
 		mov		[esi].Weapon.shot_interval_time, 2
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      0
+		mov     [esi].Weapon.bullet_speed ,      25
 	.elseif w_type == WEAPONTYPE_ROBOT
 		mov		[esi].Weapon.shot_interval_time, 5
 		mov		[esi].Weapon.time_to_next_shot,  0
-		mov     [esi].Weapon.triple_bullet,      0
+		mov     [esi].Weapon.triple_bullet,      18
+		mov     [esi].Weapon.bullet_speed ,      18
 	.elseif w_type == WEAPONTYPE_S
 		mov		[esi].Weapon.shot_interval_time, 2
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      1
+		mov     [esi].Weapon.triple_bullet,      25
 	.else
 	.endif
 
