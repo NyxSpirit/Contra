@@ -356,6 +356,23 @@ InitEvents PROC USES esi edi,events:PTR Events
 	inc [esi].Events.number
 	add edi, TYPE Event
 
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 60
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 0
+	inc [esi].Events.number
+	add edi, TYPE Event
+
+	mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 50
+	mov [edi].Event.position.pos_x, 530
+	mov [edi].Event.position.pos_y, 0
+	inc [esi].Events.number
+	add edi, TYPE Event
 	ret
 	
 InitEvents ENDP
@@ -404,15 +421,22 @@ CreateRobot PROC USES esi,
 	mov [esi].Hero.position.pos_y, eax
 	mov al, r_type
 	mov [esi].Hero.identity, al
-	mov [esi].Hero.action, HEROACTION_STAND
-	mov [esi].Hero.move_dx, 0
-	mov [esi].Hero.move_dy, 0
-	mov [esi].Hero.invincible_time, 0
-	mov [esi].Hero.shoot, 0
-	mov [esi].Hero.face_direction, DIRECTION_LEFT
-	invoke SetWeapon, esi, WEAPONTYPE_ROBOT
-	mov [esi].Hero.shoot_dx, 0
-	mov [esi].Hero.shoot_dy, 0
+	.if r_type == HEROTYPE_STATICROBOT
+		mov [esi].Hero.action, HEROACTION_STAND
+		mov [esi].Hero.move_dx, 0
+		mov [esi].Hero.move_dy, 0
+		mov [esi].Hero.invincible_time, 0
+		mov [esi].Hero.shoot, 0
+		mov [esi].Hero.face_direction, DIRECTION_LEFT
+		invoke SetWeapon, esi, WEAPONTYPE_ROBOT
+		mov [esi].Hero.shoot_dx, 0
+		mov [esi].Hero.shoot_dy, 0
+	.elseif r_type == HEROTYPE_DYNAMICROBOT
+		mov [esi].Hero.action, HEROACTION_FALL
+		mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+		mov [esi].Hero.move_dy, 0
+
+	.endif
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, 0
 	mov [esi].Hero.life, 1
@@ -609,6 +633,11 @@ UpdateHeroAction PROC USES esi,
 		.if newAction == HEROACTION_FALL
 			.if	[esi].Hero.action == HEROACTION_CRAWL
 				add [esi].Hero.position.pos_y, 32
+			.endif
+		.endif
+		.if newAction == HEROACTION_STAND
+			.if [esi].Hero.move_dx != 0
+				mov newAction, HEROACTION_RUN
 			.endif
 		.endif
 		mov [esi].Hero.action, eax

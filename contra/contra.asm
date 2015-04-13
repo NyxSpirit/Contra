@@ -136,6 +136,11 @@ CmdShow:DWORD
 				.elseif [esi].Event.e_type == EVENTTYPE_ROBOTSTOPSHOOT
 					mov edi, [esi].Event.actor
 					mov [edi].Hero.shoot, 0
+				.elseif [esi].Event.e_type == EVENTTYPE_CREATEDYNAMICROBOT
+					;invoke CreateRobot, addr robotQueue, HEROTYPE_DYNAMICROBOT, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					mov newRobot, eax
+					mov edi, newRobot
+				.else
 				.endif
 			; end execution
 				
@@ -232,13 +237,18 @@ CmdShow:DWORD
 		mov hdc, eax
 		invoke CreateCompatibleDC, hdc
 		mov hMemDC, eax
+		;invoke SelectObject,hMemDC,hBitmap 
+		;invoke GetClientRect,hWnd,addr rect 
+		;invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY
+		;invoke BitBlt, hDC, 0, 0
 		invoke GdipCreateFromHDC, hdc, addr hGraphics 
 		invoke GdipSetPageUnit, hGraphics, UnitPixel
-		 
+
 		invoke PaintBackground, hGraphics
 		invoke PaintObjects, hGraphics
 
 		invoke GdipDeleteGraphics, hGraphics
+		
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
 
@@ -482,18 +492,12 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			mov eax, hPlayerDieRightImages[esi * TYPE DWORD];
 			mov contra.hImage, eax
 			inc contra.action_imageIndex
-			.if contra.action_imageIndex == 7
-				invoke InitContra, addr contra 
-			.endif		
 		.else
 			mov contra.move_dx, CONTRA_BASIC_MOV_SPEED
 			mov esi, contra.action_imageIndex
 			mov eax, hPlayerDieLeftImages[esi * TYPE DWORD];
 			mov contra.hImage, eax
 			inc contra.action_imageIndex
-			.if contra.action_imageIndex == 7
-				invoke InitContra, addr contra 
-			.endif
 		.endif
 	.elseif contra.action == HEROACTION_SWIM
 		.if contra.jump_height < CONTRA_FLOAT_HEIGHT
@@ -587,9 +591,11 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	.endif
 		
 	invoke CollisionBackgroundJudge, addr contra, addr background
-	invoke CollisionBulletJudge, addr contra, addr enemyBullets
 
 	 
+    .if contra.action == HEROACTION_DIE && contra.action_imageIndex == 7
+		invoke InitContra, addr contra 
+	.endif		
 
 	; blink when invincible
 	.if contra.invincible_time > 0
@@ -600,12 +606,16 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			mov contra.hImage, 0
 		.endif
 		dec contra.invincible_time
+	.elseif contra.action != HEROACTION_DIE
+		invoke CollisionBulletJudge, addr contra, addr enemyBullets
 	.endif
 
 	.if contra.shoot == 1 && contra.action != HEROACTION_DIE
 		invoke OpenFire, addr contraBullets, addr contra
 	.endif
 	
+	
+
 	; keep contra in the view
 	mov background.move_length, 0
 	.if contra.position.pos_x > 250 && contra.move_dx > 0
