@@ -117,9 +117,9 @@ CmdShow:DWORD
 					mov ebx, clock
 					mov startTime, ebx
 					add startTime, ROBOT_SHOOT_INTERVAL
-					;invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSHOOT, newRobot, startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSHOOT, newRobot, startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					add startTime, ROBOT_SHOOT_LASTTIME
-					;invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, newRobot,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, newRobot,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 
 				.elseif [esi].Event.e_type == EVENTTYPE_ROBOTSHOOT
 					;invoke RobotShoot, 
@@ -137,7 +137,7 @@ CmdShow:DWORD
 					mov edi, [esi].Event.actor
 					mov [edi].Hero.shoot, 0
 				.elseif [esi].Event.e_type == EVENTTYPE_CREATEDYNAMICROBOT
-					;invoke CreateRobot, addr robotQueue, HEROTYPE_DYNAMICROBOT, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					invoke CreateRobot, addr robotQueue, HEROTYPE_DYNAMICROBOT, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					mov newRobot, eax
 					mov edi, newRobot
 				.else
