@@ -175,8 +175,10 @@ CmdShow:DWORD
 		; ==========init game params
 		invoke InitContra, addr contra 
 		invoke InitEvents, addr eventQueue
+		invoke InitMap, addr background
 		mov clock, 0
 		
+
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
 		

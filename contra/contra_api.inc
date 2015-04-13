@@ -189,7 +189,7 @@ BGTYPE_BRIDGE EQU 3
 
 Background	STRUCT
 	b_offset SDWORD 0
-	b_array		BYTE 	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(1)
+	b_array		BYTE 	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(0)
 Background	ENDS
 ;=================================
 
@@ -215,7 +215,7 @@ Events ENDS
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
 CollisionBackgroundJudge PROTO :PTR Hero,:PTR BackGround
 CollisionBulletJudge PROTO :PTR Hero, :PTR Bullets
-InitMap			PROTO
+InitMap			PROTO  background:PTR Background
 ResetStat		PROTO
 
 TakeAction			PROTO	:PTR Hero,:DWORD
