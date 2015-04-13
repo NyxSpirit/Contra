@@ -15,10 +15,11 @@ PaintObject PROTO :DWORD, :DWORD
 HandleEvents PROTO
 ContraTakeAction PROTO
 RobotsTakeAction PROTO
+
+OpenFire   PROTO  :PTR Bullets, :PTR Hero
 BulletsMove PROTO
 
 DISPLAY_SCALE EQU 2
-
 
 IDR_WAVE1 EQU 104
 .data
@@ -59,9 +60,8 @@ IDR_WAVE1 EQU 104
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
 
-;PAGE_SCALE REAL4 0.1
 ;=============================== Game params ===========
- contra Hero <<0,100>,<0,0,<0,0>>,0,0,0,0,0,0,0,0,<0>,0,0,0,0,0>
+ contra Hero <>
  background Background <>
  contraBullets Bullets <>
  enemyBullets Bullets <>

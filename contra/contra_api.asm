@@ -229,7 +229,8 @@ FillMapLoop:
 	ret
 FillMap ENDP
 
-InitMap		PROC	background:PTR Background
+InitMap		PROC	USES esi,
+	background:PTR Background
 	mov esi,background
 	mov	[esi].Background.b_offset,-32
 	invoke FillMap, background, 12, 1, 56, BGTYPE_WATER
@@ -283,20 +284,20 @@ InitMap		PROC	background:PTR Background
 	ret
 InitMap ENDP
 
-InitEvents PROC events:PTR Events
+InitEvents PROC USES esi edi,events:PTR Events
 	mov esi, events
-	mov [esi].Events.number, 1
-	
-	mov eax, [esi].Events.number
-	mov bl, TYPE Event
-	mul bl
-	lea edi, [esi].Events.events[eax]
+	lea edi, [esi].Events.events
+
 
 	mov [edi].Event.e_type, EVENTTYPE_CREATEROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 0
-	
+	mov [edi].Event.position.pos_x, 400
+	mov [edi].Event.position.pos_y, 200
+	inc [esi].Events.number
+	add edi, TYPE Event
+
 	ret
 	
 InitEvents ENDP
@@ -306,7 +307,8 @@ ResetStat	PROC
 ResetStat ENDP
 
 ;===================================
-InitContra PROC hero:PTR Hero
+InitContra PROC USES esi,
+	 hero:PTR Hero
 	mov esi, hero
 	mov [esi].Hero.position.pos_x, 0
 	mov [esi].Hero.position.pos_y, 0
@@ -326,7 +328,8 @@ InitContra PROC hero:PTR Hero
 InitContra ENDP
 
 ;==================================
-CreateRobot PROC robots:PTR Robots, posx:DWORD, posy:DWORD
+CreateRobot PROC USES esi,
+	robots:PTR Robots, posx:DWORD, posy:DWORD
 	local cnt:DWORD
 
 	mov esi, robots
@@ -336,8 +339,10 @@ CreateRobot PROC robots:PTR Robots, posx:DWORD, posy:DWORD
 	mul bl
 	lea esi, [esi].Robots.robots[eax]
 	
-	mov [esi].Hero.position.pos_x, 400
-	mov [esi].Hero.position.pos_y, 400
+	mov eax, posx
+	mov [esi].Hero.position.pos_x, eax
+	mov eax, posy
+	mov [esi].Hero.position.pos_y, eax
 	mov [esi].Hero.action, HEROACTION_STAND
 	mov [esi].Hero.move_dx, 0
 	mov [esi].Hero.move_dy, 0
@@ -350,16 +355,98 @@ CreateRobot PROC robots:PTR Robots, posx:DWORD, posy:DWORD
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, 0
 	mov [esi].Hero.life, 1
+
+	invoke SetWeapon, esi, WEAPONTYPE_ROBOT
 	invoke UpdateHeroCollisionRect, esi
+
+	mov eax, esi
 	ret
 CreateRobot ENDP
 ;=================================
-DeleteRobot PROC	robots:PTR Robots, index :DWORD
+DeleteRobot PROC	USES esi ebx edi,
+	robots:PTR Robots,index:DWORD
+	local num : DWORD
+	mov esi, robots
+
+	mov eax, [esi].Robots.number
+	mov num, eax
+
+	mov ecx, num
+	sub ecx, index
+	mov eax, TYPE Hero
+	mul cx
+	mov ecx, eax
+
+	mov ebx, index
+	mov eax, TYPE Hero
+	mul bx
+	lea edi, [esi].Robots.robots[eax]
+	add eax, TYPE Hero
+	lea esi, [esi].Robots.robots[eax]
+	rep movsb
+	
+	mov esi, robots
+	dec [esi].Robots.number
+
 	ret
 DeleteRobot	ENDP
+CreateRobotEvent PROC   USES esi,
+	events:PTR Events, e_type: DWORD, actor:DWORD,  clock_limit:DWORD, location_limit:DWORD, pos_x:SDWORD, pos_y:SDWORD
+	mov esi, events
+	mov eax, [esi].Events.number
+	inc [esi].Events.number
+	mov bl, TYPE Event
+	mul bl
+	lea esi, [esi].Events.events[eax]
+	
+	mov eax, pos_x
+	mov [esi].Event.position.pos_x, eax
+	mov eax, pos_y
+	mov [esi].Event.position.pos_y, eax
+	mov eax, e_type
+	mov [esi].Event.e_type, eax
+	mov eax, actor
+	mov [esi].Event.actor, eax
+	mov eax, clock_limit
+	mov [esi].Event.clock_limit, eax
+	mov eax, location_limit
+	mov [esi].Event.location_limit, eax
+
+	mov eax, esi
+	ret 
+CreateRobotEvent ENDP
+;=================================
+DeleteEvent PROC   USES esi ebx edi,
+	events:PTR Events,index:DWORD
+	local num : DWORD
+	mov esi, events
+
+	mov eax, [esi].Events.number
+	mov num, eax
+
+	mov ecx, num
+	sub ecx, index
+	mov eax, TYPE Event
+	mul cx
+	mov ecx, eax
+
+	mov ebx, index
+	mov eax, TYPE Event
+	mul bx
+	lea edi, [esi].Events.events[eax]
+	add eax, TYPE Event
+	lea esi, [esi].Events.events[eax]
+	rep movsb
+	
+	mov esi, events
+	dec [esi].Events.number
+
+	ret
+DeleteEvent ENDP
 ;=================================
 ;command action:0:standby,1:run,2:jump,3:lie,4:die,5:shoot,6:cancel shoot
-TakeAction		PROC	hero:PTR Hero,command:DWORD
+TakeAction	PROC		USES esi,
+	hero:PTR Hero,command:DWORD
 	local formerAction: DWORD
 	local newAction:DWORD
 	mov		esi,hero
@@ -404,7 +491,6 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 				mov newAction, HEROACTION_JUMP
 			.endif
 			.if formerAction == HEROACTION_CRAWL
-				mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
@@ -449,7 +535,8 @@ TakeAction		PROC	hero:PTR Hero,command:DWORD
 TakeAction ENDP
 ;==================================
 ;==================================
-UpdateHeroAction PROC hero:PTR Hero, newAction: DWORD
+UpdateHeroAction PROC USES esi,
+	hero:PTR Hero, newAction: DWORD
 	mov eax, newAction
 	.if eax != [esi].Hero.action
 		.if newAction == HEROACTION_FALL
@@ -484,14 +571,27 @@ ChangeHeroStat	ENDP
 ;==================================
 
 ;==================================
-SwitchWeapon	PROC	hero:PTR Hero,weapon:PTR Weapon
+SetWeapon	PROC	USES esi,
+	hero:PTR Hero, w_type: BYTE
 	mov		esi,hero
-	mov		eax,weapon
-	mov		ebx,[eax].Weapon.w_type
-	mov		[esi].Hero.weapon,ebx
+	lea		esi, [esi].Hero.weapon
+	.if w_type == WEAPONTYPE_B
+		mov		[esi].Weapon.shot_interval_time, 3
+		mov		[esi].Weapon.time_to_next_shot,  0
+		mov     [esi].Weapon.triple_bullet,      0
+	.elseif w_type == WEAPONTYPE_ROBOT
+		mov		[esi].Weapon.shot_interval_time, 8
+		mov		[esi].Weapon.time_to_next_shot,  0
+		mov     [esi].Weapon.triple_bullet,      0
+	.elseif w_type == WEAPONTYPE_S
+		mov		[esi].Weapon.shot_interval_time, 3
+		mov		[esi].Weapon.time_to_next_shot,  0
+		mov     [esi].Weapon.triple_bullet,      1
+	.else
+	.endif
 
 	ret
-SwitchWeapon	ENDP
+SetWeapon	ENDP
 ;==================================
 
 ;==================================
@@ -544,7 +644,8 @@ ChangeBulletPosition ENDP
 ;==================================
 
 ;==================================
-ChangeBulletRect	PROC	bullet:PTR Bullet,rect:PTR	CollisionRect
+ChangeBulletRect	PROC	USES esi,
+	bullet:PTR Bullet,rect:PTR	CollisionRect
 	mov		esi,bullet
 	mov		eax,rect
 
@@ -563,7 +664,8 @@ ChangeBulletRect	PROC	bullet:PTR Bullet,rect:PTR	CollisionRect
 	ret
 ChangeBulletRect	ENDP
 ;================================
-CreateBullet  PROC bullets:PTR Bullets,hero:PTR Hero, hImage: DWORD
+CreateBullet PROC USES esi edi, 
+	 bullets:PTR Bullets,hero:PTR Hero, hImage: DWORD
 	local shootOffsetX: SDWORD
 	local shootOffsetY: SDWORD
 
@@ -616,7 +718,8 @@ CreateBullet  ENDP
 ;==================================
 
 ;==================================
-DeleteBullet  PROC bullets:PTR Bullets,index:DWORD
+DeleteBullet  PROC USES esi ebx edi,
+	bullets:PTR Bullets,index:DWORD
 	local num : DWORD
 	mov esi, bullets
 
@@ -643,7 +746,7 @@ DeleteBullet  PROC bullets:PTR Bullets,index:DWORD
 	ret
 DeleteBullet  ENDP
 ;==================================
-UpdateHeroPosition  PROC hero:PTR Hero
+UpdateHeroPosition  PROC hero:PTR Hero, bgMoveLength:DWORD
 	mov		esi, hero
 
 	mov eax, [esi].Hero.move_dx
@@ -653,11 +756,15 @@ UpdateHeroPosition  PROC hero:PTR Hero
 	add [esi].Hero.position.pos_y, eax
 	add [esi].Hero.range.position.pos_y, eax
 
+	mov eax, bgMoveLength
+	sub [esi].Hero.position.pos_x, eax
+	sub [esi].Hero.range.position.pos_x, eax
 	ret
 UpdateHeroPosition  ENDP  
 
 ;=======================================
-UpdateHeroCollisionRect PROC hero: PTR Hero
+UpdateHeroCollisionRect PROC USES esi,
+	hero: PTR Hero
 	local rect: CollisionRect
 	mov esi, hero
 	.if [esi].Hero.action == HEROACTION_RUN
@@ -744,7 +851,8 @@ UpdateHeroCollisionRect PROC hero: PTR Hero
 	.endif
 	ret	
 UpdateHeroCollisionRect ENDP
-ChangeHeroRect	PROC	hero:PTR Hero,rect:PTR	CollisionRect
+ChangeHeroRect	PROC	USES esi,
+	hero:PTR Hero,rect:PTR	CollisionRect
 	mov		esi,hero
 	mov		eax,rect
 

@@ -68,10 +68,18 @@ Object	STRUCT
 Object	ENDS
 ;=================================
 
+WEAPONTYPE_B		EQU 0
+WEAPONTYPE_ROBOT	EQU 1
+WEAPONTYPE_R		EQU 2
+WEAPONTYPE_F		EQU 3
+WEAPONTYPE_S		EQU 4
 ;=================================
 Weapon	STRUCT
 	;weapon type	0:B,1:M,2:L,3:R,4:S,5:F,
-	w_type	DWORD	0;
+	shot_interval_time    DWORD   0
+	;hImage				  DWORD   0
+	time_to_next_shot     DWORD   0
+	triple_bullet		  DWORD   0
 Weapon	ENDS
 ;=================================
 
@@ -141,6 +149,9 @@ Bullets  STRUCT
 	bullets     Bullet  MAX_BULLETS_NUMBER dup (<>)
 Bullets  ENDS
 ;=================================
+
+ROBOT_SHOOT_INTERVAL EQU 30
+ROBOT_SHOOT_LASTTIME EQU 20
 Robots STRUCT
 	number		DWORD  0
 	robots		Hero   MAX_ROBOTS_NUMBER dup (<>)
@@ -189,6 +200,7 @@ BGTYPE_BRIDGE EQU 3
 
 Background	STRUCT
 	b_offset SDWORD 0
+	move_length   DWORD  0
 	b_array		BYTE 	BACKGROUNDTOTALWIDTH * BACKGROUNDHEIGHT DUP(0)
 Background	ENDS
 ;=================================
@@ -197,8 +209,8 @@ EVENTTYPE_NONE EQU 0
 EVENTTYPE_CREATEROBOT EQU 1
 EVENTTYPE_MOVELEFT EQU 2
 EVENTTYPE_MOVERIGHT EQU 3
-EVENTTYPE_SHOOT EQU 4
-
+EVENTTYPE_ROBOTSHOOT EQU 4
+EVENTTYPE_ROBOTSTOPSHOOT EQU 5
 Event STRUCT
 	position    Position <>
 	e_type	DWORD		0
@@ -223,9 +235,9 @@ TakeAction			PROTO	:PTR Hero,:DWORD
 ChangeHeroDirection	PROTO :PTR Hero,:DWORD
 ChangeHeroRect  PROTO   :PTR Hero,:PTR	CollisionRect
 ChangeHeroStat	PROTO	:PTR Hero,:DWORD
-SwitchWeapon	PROTO	:PTR Hero,:PTR Weapon
+SetWeapon	PROTO	:PTR Hero,:BYTE
 UpdateHeroCollisionRect PROTO :PTR Hero
-UpdateHeroPosition PROTO :PTR Hero
+UpdateHeroPosition PROTO :PTR Hero, :DWORD
 UpdateHeroAction PROTO :PTR Hero, :DWORD
 
 InitContra PROTO :PTR Hero
@@ -238,6 +250,8 @@ ChangeBulletPosition	PROTO	:PTR Bullet,:PTR Position
 ChangeBulletRect	PROTO	:PTR Bullet,:PTR	CollisionRect
 
 InitEvents PROTO :PTR Events
+CreateRobotEvent PROTO :PTR Events, : DWORD, :DWORD,  :DWORD, :DWORD, :SDWORD,:SDWORD
+DeleteEvent PROTO :PTR Events, :DWORD
 
 ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
 TowerShoot		PROTO	:PTR Tower,:DWORD
