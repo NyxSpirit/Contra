@@ -14,35 +14,30 @@ include contra_api.inc
 CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
-			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,speed:DWORD,jump_speed:DWORD
+			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,fall_speed:DWORD
 	;0:air,1:water,2:ground,3:bridge
 	
 	mov		esi,hero
-	.if		[esi].Hero.move_dx == 0 && [esi].Hero.move_dy <= 0
+	.if		[esi].Hero.move_dy < 0
 			ret
 	.endif
-
-	mov		eax,CONTRA_BASIC_MOV_SPEED
-	mov		speed,eax
-	mov		eax,CONTRA_BASIC_JUMP_SPEED
-	mov		jump_speed,eax
 	mov		img_width,BACKGROUNDIMAGE_UNITWIDTH
 	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
+	mov		fall_speed,CONTRA_BASIC_FALL_SPEED
 	
 	mov		eax,[esi].Hero.range.position.pos_x
+	add		eax,32	;half of image width
 	mov		ebx,[esi].Hero.range.position.pos_y
-	mov		ecx,background
+	add		ebx,96	;contra image height
+	mov		ecx,background	
 
-	.if		[esi].Hero.position.pos_y >= 300
-			invoke UpdateHeroAction, hero, HEROACTION_DIE
-			mov	[esi].Hero.move_dx,0
-			mov	[esi].Hero.move_dy,0
-			ret
-	.endif	
-
+	;down block
 	mov		edx,0
 	sub		eax,[ecx].Background.b_offset
 	div		img_width
+	.if	edx	> 0
+		;inc		eax
+	.endif
 	mov		x,eax
 
 	mov		edx,0
@@ -50,150 +45,61 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	div		img_height
 	mov		y,eax
 
-	mov		eax,img_height
+	mov		eax,BACKGROUNDTOTALWIDTH
 	mul		y
 	add		eax,x
 	mov		position,eax
 
-	
-
-	;left block
-	mov		ecx,background
-	mov		eax,position
-	dec		eax
-	mov		bl,[ecx].Background.b_array[eax]
-
-	.if		bl == BGTYPE_AIR
-			.if	[esi].Hero.move_dx < 0
-			.endif
-	.elseif	bl == BGTYPE_WATER
-			.if	[esi].Hero.move_dx < 0
-			.endif
-	.elseif	bl == BGTYPE_GROUND
-
-			;pos_y
-			mov		eax,img_height
-			mov		ebx, y
-			mul		ebx
-			mov	rect_left.position.pos_y,eax
-
-			;pos_x
-			mov	eax,x
-			dec	eax	;left
-			mul	img_width
-			mov	edx,background
-			add	eax,[edx].Background.b_offset
-			mov	rect_left.position.pos_x,eax
-
-			mov	eax,img_width
-			add	eax,5
-			mov	rect_left.r_width,eax
-			mov	eax,img_height
-			mov	rect_left.r_height,eax
-			.if	[esi].Hero.move_dx < 0
-				INVOKE	CollisionJudge,addr	rect_left,addr [esi].Hero.range
-				.if eax == 1
-					mov [esi].Hero.move_dx,0
-				.elseif eax == 0
-				.endif
-			.endif
-	.elseif	ebx == BGTYPE_BRIDGE
-			.if	[esi].Hero.move_dx < 0
-			.endif
-	.endif
-
-	;right block
-	mov		ecx,background
-	mov		eax,position
-	inc		eax
-	mov		bl,[ecx].Background.b_array[eax]
-
-	.if		bl == BGTYPE_AIR
-			.if	[esi].Hero.move_dx > 0
-			.endif
-	.elseif	bl == BGTYPE_WATER
-			.if	[esi].Hero.move_dx > 0
-			.endif
-	.elseif	bl == BGTYPE_GROUND
-			;pos_y
-			mov	eax,y
-			mul	img_height
-			mov	rect_right.position.pos_y,eax
-			;pos_x
-			mov	eax,x
-			inc	eax	;right
-			mul	img_width
-			mov	edx,background
-			add	eax,[edx].Background.b_offset
-			mov	rect_right.position.pos_x,eax
-
-			mov	eax,img_width
-			mov	rect_right.r_width,eax
-			mov	eax,img_height
-			mov	rect_right.r_height,eax
-			.if	[esi].Hero.move_dx > 0
-				INVOKE	CollisionJudge,addr	rect_right,addr [esi].Hero.range
-				.if eax == 1				
-					mov [esi].Hero.move_dx,0
-				.elseif eax == 0
-				.endif
-			.endif
-	.elseif	bl == BGTYPE_BRIDGE
-			.if	[esi].Hero.move_dx > 0
-			.endif
-	.endif
-
-	;down block
 	mov		ecx,background
 	mov		eax,position
 	mov		bl,[ecx].Background.b_array[eax]
 
-	;pos_y
-	mov	eax,y
-	mul	img_height
-	mov	rect_down.position.pos_y,eax
-	;pos_x
-	mov	eax,x
-	mul	img_width
-	mov	edx,background
-	add	eax,[edx].Background.b_offset
-	mov	rect_down.position.pos_x,eax
+	.if		ebx >= 500 && bl == 0
+			invoke UpdateHeroAction, hero, HEROACTION_DIE
+			mov	[esi].Hero.move_dx,0
+			mov	[esi].Hero.move_dy,0
+			ret
+	.endif	
 
-	mov	eax,img_width
-	mov	rect_down.r_width,eax
-	mov	eax,img_height
-	mov	rect_down.r_height,eax
 	.if		bl == BGTYPE_AIR
-			.if	[esi].Hero.move_dy > 0
-			.endif
+		.if	[esi].Hero.move_dy == 0
+			invoke UpdateHeroAction, hero, HEROACTION_FALL
+			mov	eax,fall_speed
+			mov	[esi].Hero.move_dy,eax
+			ret
+		.endif
 	.elseif	bl == BGTYPE_WATER
-			.if	[esi].Hero.move_dy > 0
-				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
-				.if eax == 1
-					invoke UpdateHeroAction, hero, HEROACTION_SWIM
-					mov	eax,1
-				.elseif eax == 0
-				.endif
-			.endif
+		.if	[esi].Hero.move_dy == 0
+			invoke UpdateHeroAction, hero, HEROACTION_FALL
+			mov	eax,fall_speed
+			mov	[esi].Hero.move_dy,eax
+			ret
+		.endif
 	.elseif	bl == BGTYPE_GROUND	
-			.if	[esi].Hero.move_dy > 0
-				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
-				.if eax == 1
-					invoke UpdateHeroAction, hero, HEROACTION_STAND
-					mov	[esi].Hero.move_dy,0
-				.elseif eax == 0
-				.endif
-			.endif
+		.if	[esi].Hero.move_dy > 0
+			invoke UpdateHeroAction, hero, HEROACTION_STAND
+			mov	[esi].Hero.move_dy,0
+			ret
+		.endif
 	.elseif	bl == BGTYPE_BRIDGE
-			.if [esi].Hero.move_dy > 0
-				INVOKE	CollisionJudge,addr	rect_down,addr [esi].Hero.range
-				.if eax == 1
-					mov	[esi].Hero.move_dy,0
-				.elseif eax == 0
-				.endif
-			.endif
+		.if	[esi].Hero.move_dy > 0
+			invoke UpdateHeroAction, hero, HEROACTION_STAND
+			mov	[esi].Hero.move_dy,0
+			ret
+		.endif
 	.endif
 
+	mov		ecx,background
+	mov		eax,position
+	sub		eax,BACKGROUNDTOTALWIDTH
+	mov		bl,[ecx].Background.b_array[eax]
+	.if	bl == BGTYPE_WATER			
+			invoke UpdateHeroAction, hero, HEROACTION_SWIM	
+			mov	[esi].Hero.move_dy,0				
+	.elseif bl == BGTYPE_GROUND						
+			;invoke UpdateHeroAction, hero,HEROACTION_STAND
+			;mov	[esi].Hero.move_dy,-20
+	.endif
 	ret
 CollisionBackgroundJudge	ENDP
 ;================================
@@ -320,6 +226,8 @@ FillMapLoop:
 FillMap ENDP
 
 InitMap		PROC	background:PTR Background
+	mov esi,background
+	;mov	[esi].Background.b_offset,-32
 	invoke FillMap, background, 12, 1, 56, BGTYPE_WATER
 	invoke FillMap, background, 6, 2, 15, BGTYPE_GROUND
 	invoke FillMap, background, 8, 6, 8, BGTYPE_GROUND

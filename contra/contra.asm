@@ -360,6 +360,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke GdipGetImageHeight, hBackgroundImage, addr imageHeight
 	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, imageWidth , imageHeight
 
+	invoke InitMap,addr background
 	ret
  PaintBackground ENDP
 
