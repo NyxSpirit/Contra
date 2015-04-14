@@ -1198,13 +1198,5 @@ DeleteBridgeBlock PROC USES esi,
 	mov		[ecx].Background.b_array[eax],0
 
 	ret
-<<<<<<< HEAD
-CheckBridgeBomb	ENDP
-
-DeleteBridgeBlock PROC USES esi,
-	bridge: PTR Bridge, index : DWORD
-	ret
-=======
->>>>>>> a1c9a060605fc01f82778ecc113cd3e88a19f8fc
 DeleteBridgeBlock ENDP
 END
