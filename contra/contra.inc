@@ -14,7 +14,8 @@ PaintObject PROTO :DWORD, :DWORD
 
 HandleEvents PROTO
 ContraTakeAction PROTO
-RobotsTakeAction PROTO
+StaticRobotsTakeAction PROTO
+DynamicRobotsTakeAction PROTO
 TowerTakeAction PROTO
 
 OpenFire   PROTO  :PTR Bullets, :PTR Hero
@@ -77,7 +78,8 @@ IDR_WAVE1 EQU 104
  background Background <>
  contraBullets Bullets <>
  enemyBullets Bullets <>
- robotQueue Robots <>
+ dynamicRobotQueue Robots <>
+ staticRobotQueue Robots <>
  towerQueue Robots <>
  eventQueue Events <>
  
