@@ -380,7 +380,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov esi, events
 	lea edi, [esi].Events.events
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 120
@@ -389,12 +389,61 @@ InitEvents PROC USES esi edi,events:PTR Events
 	inc [esi].Events.number
 	add edi, TYPE Event
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 520
+	mov [edi].Event.location_limit, 1280-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 200
+	inc [esi].Events.number
+	add edi, TYPE Event
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 2496-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+	add edi, TYPE Event
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 2688 - 520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+	add edi, TYPE Event
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 3072-520
 	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 0
+	inc [esi].Events.number
+	add edi, TYPE Event
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 4800-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+	add edi, TYPE Event
+
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 700-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 200
+	inc [esi].Events.number
+	add edi, TYPE Event
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 900-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 300
 	inc [esi].Events.number
 	add edi, TYPE Event
 
@@ -428,10 +477,9 @@ InitContra PROC USES esi,
 	invoke UpdateHeroCollisionRect, hero
 	ret
 InitContra ENDP
-
 ;==================================
 CreateRobot PROC USES esi,
-	robots:PTR Robots, r_type:BYTE, posx:DWORD, posy:DWORD
+	robots:PTR Robots, r_type:BYTE, posx:SDWORD, posy:SDWORD
 	local cnt:DWORD
 
  	mov esi, robots
@@ -457,16 +505,24 @@ CreateRobot PROC USES esi,
 		invoke SetWeapon, esi, WEAPONTYPE_ROBOT
 		mov [esi].Hero.shoot_dx, 0
 		mov [esi].Hero.shoot_dy, 0
+		mov [esi].Hero.life, 1
 	.elseif r_type == HEROTYPE_DYNAMICROBOT
 		mov [esi].Hero.action, HEROACTION_FALL
 		mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
 		mov [esi].Hero.move_dy, 0
-
+		mov [esi].Hero.life, 1
+	.elseif r_type == HEROTYPE_TOWER
+		mov [esi].Hero.action, TOWERACTION_OPEN
+		mov [esi].Hero.move_dx, 0
+		mov [esi].Hero.move_dy, 0
+		mov [esi].Hero.invincible_time, 0
+		mov [esi].Hero.shoot, 0
+		mov [esi].Hero.face_direction, DIRECTION_LEFT
+		mov [esi].Hero.life, 5
 	.endif
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, 0
-	mov [esi].Hero.life, 1
-
+	
 	invoke UpdateHeroCollisionRect, esi
 
 	mov eax, esi
@@ -664,6 +720,15 @@ UpdateHeroAction PROC USES esi,
 		.if newAction == HEROACTION_STAND
 			.if [esi].Hero.move_dx != 0
 				mov eax, HEROACTION_RUN
+			.endif
+		.endif
+		.if newAction == HEROACTION_DIE
+			.if [esi].Hero.face_direction == DIRECTION_RIGHT
+				mov [esi].Hero.move_dx, -10
+				mov [esi].Hero.move_dy, -20
+			.else 
+				mov [esi].Hero.move_dx, 10
+				mov [esi].Hero.move_dy, -20
 			.endif
 		.endif
 		mov [esi].Hero.action, eax

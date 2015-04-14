@@ -15,6 +15,7 @@ PaintObject PROTO :DWORD, :DWORD
 HandleEvents PROTO
 ContraTakeAction PROTO
 RobotsTakeAction PROTO
+TowerTakeAction PROTO
 
 OpenFire   PROTO  :PTR Bullets, :PTR Hero
 BulletsMove PROTO
@@ -48,8 +49,9 @@ IDR_WAVE1 EQU 104
  playerDiveFile db "Res\\player\\player_dive.png", 0
 
  bulletFiles  db "Res\\bullet\\bullet", 0
- towerFile db "Res\\npc\\tower1.png", 0
- 
+ towerFiles db "Res\\barbette\\barbette", 0
+ towerShowupFiles db "Res\\barbette\\barbette_showup", 0
+
  staticRobotShootRightFiles db "Res\\npc\\npc1_right", 0
  staticRobotShootRightDownFiles db "Res\\npc\\npc1_rightdown", 0
  staticRobotShootRightUpFiles db "Res\\npc\\npc1_rightup", 0
@@ -76,7 +78,7 @@ IDR_WAVE1 EQU 104
  contraBullets Bullets <>
  enemyBullets Bullets <>
  robotQueue Robots <>
-
+ towerQueue Robots <>
  eventQueue Events <>
  
  clock		DWORD	0
@@ -119,7 +121,8 @@ IDR_WAVE1 EQU 104
  hDynamicRobotJumpLeftImage dd ?
  hDynamicRobotDieLeftImages dd 4 dup (?)
 
-
+ hTowerImages dd 12 dup (?)
+ hTowerShowupImages dd 4 dup (?)
  hBulletImages dd 4 dup (?)
 
  hMusic dd ?

@@ -93,11 +93,14 @@ HEROACTION_DIE EQU 5
 HEROACTION_DIVE EQU 7
 HEROACTION_FALL EQU 8
 HEROACTION_SWIM EQU 9
+TOWERACTION_OPEN EQU 10
+
 
 HEROTYPE_BLUECONTRA EQU 0
 HEROTYPE_REDCONTRA EQU 1
 HEROTYPE_STATICROBOT EQU 2
 HEROTYPE_DYNAMICROBOT EQU 3
+HEROTYPE_TOWER EQU 4
 
 Hero STRUCT
 	position	Position	<>
@@ -212,6 +215,7 @@ EVENTTYPE_ROBOTMOVERIGHT EQU 3
 EVENTTYPE_ROBOTSHOOT EQU 4
 EVENTTYPE_ROBOTSTOPSHOOT EQU 5
 EVENTTYPE_CREATEDYNAMICROBOT EQU 6
+EVENTTYPE_CREATETOWER EQU 7
 Event STRUCT
 	position    Position <>
 	e_type	DWORD		0
@@ -222,7 +226,7 @@ Event ENDS
 
 Events STRUCT
 	number	DWORD		0
-	events	Event       30  dup (<>)
+	events	Event       100  dup (<>)
 	
 Events ENDS
 CollisionJudge	PROTO	:PTR CollisionRect,	:PTR CollisionRect
@@ -243,7 +247,7 @@ UpdateHeroPosition PROTO :PTR Hero, :DWORD
 UpdateHeroAction PROTO :PTR Hero, :DWORD
 
 InitContra PROTO :PTR Hero
-CreateRobot PROTO :PTR Robots, :BYTE, :DWORD, :DWORD
+CreateRobot PROTO :PTR Robots, :BYTE, :SDWORD, :SDWORD
 DeleteRobot PROTO :PTR Robots, :DWORD
 
 CreateBullet		PROTO   :PTR Bullets,:PTR Hero, :DWORD
@@ -256,6 +260,7 @@ CreateRobotEvent PROTO :PTR Events, : DWORD, :DWORD,  :DWORD, :DWORD, :SDWORD,:S
 DeleteEvent PROTO :PTR Events, :DWORD
 
 ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
+;CreateTower     PROTO   :PTR Towers, :DWORD, :DWORD
 TowerShoot		PROTO	:PTR Tower,:DWORD
 TowerDamage		PROTO	:PTR Tower
 
