@@ -144,6 +144,19 @@ CmdShow:DWORD
 					invoke CreateRobot, addr dynamicRobotQueue, HEROTYPE_DYNAMICROBOT, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					mov newRobot, eax
 					mov edi, newRobot
+					.if [edi].Hero.position.pos_x > 250
+						mov [edi].Hero.face_direction, DIRECTION_LEFT
+						mov [edi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+					.else
+						mov [edi].Hero.face_direction, DIRECTION_LEFT
+						mov [edi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+					.endif
+					mov ebx, clock
+					mov startTime, ebx
+					add startTime, 20
+					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_CREATEDYNAMICROBOT, 0, startTime, 0, SCREEN_WIDTH, 20
+						
+
 				.elseif [esi].Event.e_type == EVENTTYPE_CREATETOWER
 					invoke CreateRobot, addr towerQueue, HEROTYPE_TOWER,  [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					mov edi, eax
@@ -248,14 +261,14 @@ CmdShow:DWORD
 
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerFiles, 11, addr hTowerImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR towerBoomFiles, 3, addr hTowerBoomImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR bridgeBoomFiles, 3, addr hBridgeBoomImages, ADDR IMAGETYPE_PNG
+
+
 		; ==========LoadImageResources end
 
-		; ==========init game params
-		invoke InitContra, addr contra 
-		invoke InitEvents, addr eventQueue
-		invoke InitMap, addr background
-		mov clock, 0
 		
+		invoke InitGame
 
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
@@ -394,38 +407,27 @@ CmdShow:DWORD
 	ret	
  WndProc endp 
 
- UnicodeStr	PROC USES esi Source:DWORD,Dest:DWORD
-												; convert a string to UNICODE
-	mov		esi,Source
-	mov		edx,Dest
-	xor		eax,eax
-	sub		eax,1
-@@:
-	add		eax,1
-	movzx	ecx,BYTE PTR [esi+eax]
-	mov		WORD PTR [edx+eax*2],cx
-	test	ecx,ecx
-	jnz		@b
-	ret
+; ===================================================== Loading and initiating
+;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;
 
-UnicodeStr	ENDP
- StrConcat PROC USES esi edi ecx,
-	target : PTR BYTE,
-	source : PTR BYTE
-	
-	cld
-	INVOKE StrLen, [target]
-	mov edi, eax
-	add edi, target
-	mov esi, source
-	INVOKE StrLen, [source]
-	mov ecx, eax
-	inc ecx
-	rep movsb
-	INVOKE StrLen, [target]
-	ret
-StrConcat ENDP
+InitGame PROC
+	; ==========init game params
+	invoke InitContra, addr contra 
+	invoke InitEvents, addr eventQueue
+	invoke InitMap, addr background
 
+	mov staticRobotQueue.number, 0
+	mov dynamicRobotQueue.number, 0
+	mov towerQueue.number, 0
+
+	mov contraBullets.number, 0
+	mov enemyBullets.number, 0
+	;mov wndstart, 0
+	mov clock, 0
+
+	ret
+InitGame ENDP
 LoadImageResources PROC
 	local buffer [64] :BYTE
 	
@@ -467,6 +469,12 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	jne @b
 	ret
  LoadImageSeries ENDP
+
+
+
+; ================================================  Sound and view
+;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;
  SoundProc PROC
 	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
 	ret
@@ -848,6 +856,10 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		.endif	
 		
 		invoke UpdateHeroPosition, esi, background.move_length
+		invoke isHeroOutofScreen, esi
+		.if eax == 1
+			invoke UpdateHeroAction, esi, HEROACTION_GONE
+		.endif
 	.endw
 	ret
  StaticRobotsTakeAction ENDP 
@@ -864,13 +876,6 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		dec index
 		sub esi, TYPE Hero
 	 
-
-		mov eax, [esi].Hero.range.position.pos_x
-		.if contra.range.position.pos_x > eax
-			mov [esi].Hero.face_direction, DIRECTION_RIGHT
-		.else
-			mov [esi].Hero.face_direction, DIRECTION_LEFT
-		.endif
 			.if [esi].Hero.action == HEROACTION_DIE
 				.if [esi].Hero.face_direction == DIRECTION_RIGHT
 					mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
@@ -913,7 +918,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					mov eax, hDynamicRobotRunRightImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 6
+					.if [esi].Hero.action_imageIndex == 4
 						mov [esi].Hero.action_imageIndex, 0
 					.endif
 				.else
@@ -921,7 +926,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					mov eax, hDynamicRobotRunLeftImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 6
+					.if [esi].Hero.action_imageIndex == 4
 						mov [esi].Hero.action_imageIndex, 0
 					.endif
 				.endif
@@ -942,7 +947,13 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		.endif	
 		
 		invoke UpdateHeroPosition, esi, background.move_length
-	
+		.if [esi].Hero.action == HEROACTION_SWIM
+			invoke DeleteRobot, addr dynamicRobotQueue, index
+		.endif
+		invoke isHeroOutofScreen, esi
+		.if eax == 1
+			invoke DeleteRobot, addr dynamicRobotQueue, index
+		.endif
 	.endw
 
 	ret
@@ -1012,19 +1023,19 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		.elseif [esi].Hero.action == HEROACTION_DIE
 			.if [esi].Hero.face_direction == DIRECTION_RIGHT
 				mov edi, [esi].Hero.action_imageIndex
-				mov eax, hStaticRobotDieRightImages[edi * TYPE DWORD];
+				mov eax, hTowerBoomImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
-				.if [esi].Hero.action_imageIndex == 4
+				.if [esi].Hero.action_imageIndex == 2
 					invoke UpdateHeroAction, esi, HEROACTION_GONE
 					.continue
 				.endif		
 			.else
 				mov edi, [esi].Hero.action_imageIndex
-				mov eax, hStaticRobotDieLeftImages[edi * TYPE DWORD];
+				mov eax, hTowerBoomImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
-				.if [esi].Hero.action_imageIndex == 4
+				.if [esi].Hero.action_imageIndex == 2
 					invoke UpdateHeroAction, esi, HEROACTION_GONE
 					.continue
 				.endif
@@ -1066,8 +1077,14 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			invoke CollisionBulletJudge, esi, addr contraBullets
 		.endif	
 		
+		mov [esi].Hero.move_dx, 0
+		mov [esi].Hero.move_dy, 0
 		invoke UpdateHeroPosition, esi, background.move_length
 
+		invoke isHeroOutofScreen, esi
+		.if eax == 1
+			invoke UpdateHeroAction, esi, HEROACTION_GONE
+		.endif
 	.endw
 	ret
  TowerTakeAction ENDP
@@ -1153,4 +1170,66 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  BulletsMove ENDP
 
+; ==============================  Functions
+;;;;;;;;
+;;;;;;;;
+ isHeroOutofScreen PROC USES esi,
+    hero:PTR Hero
+	local x:SDWORD
+	local y:SDWORD
+
+	mov esi, hero
+	mov eax, [esi].Hero.range.position.pos_x
+	mov x, eax
+	mov eax, [esi].Hero.range.position.pos_y
+	mov y, eax
+	.if x > SCREEN_WIDTH + 100 || y > SCREEN_HEIGHT
+		mov eax, 1
+		ret
+	.endif
+	
+	mov eax, [esi].Hero.range.r_width
+	mov ebx, [esi].Hero.range.r_height
+	add x, eax
+	add y, ebx
+
+	.if x < -100 || y < -100
+		mov eax, 1
+		ret
+	.endif
+
+	mov eax, 0
+	ret
+ isHeroOutofScreen ENDP
+  UnicodeStr	PROC USES esi Source:DWORD,Dest:DWORD
+												; convert a string to UNICODE
+	mov		esi,Source
+	mov		edx,Dest
+	xor		eax,eax
+	sub		eax,1
+@@:
+	add		eax,1
+	movzx	ecx,BYTE PTR [esi+eax]
+	mov		WORD PTR [edx+eax*2],cx
+	test	ecx,ecx
+	jnz		@b
+	ret
+
+UnicodeStr	ENDP
+ StrConcat PROC USES esi edi ecx,
+	target : PTR BYTE,
+	source : PTR BYTE
+	
+	cld
+	INVOKE StrLen, [target]
+	mov edi, eax
+	add edi, target
+	mov esi, source
+	INVOKE StrLen, [source]
+	mov ecx, eax
+	inc ecx
+	rep movsb
+	INVOKE StrLen, [target]
+	ret
+StrConcat ENDP
 end start 

@@ -4,8 +4,8 @@ include contra_api.inc
 WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD 
 SoundProc   PROTO
 
-UnicodeStr	PROTO :DWORD,:DWORD
-StrConcat	PROTO :PTR BYTE,:PTR BYTE
+
+InitGame    PROTO
 LoadImageSeries PROTO : DWORD, : BYTE,  : DWORD,  : DWORD
 LoadImageResources PROTO 
 PaintBackground PROTO :DWORD
@@ -21,6 +21,10 @@ TowerTakeAction PROTO
 
 OpenFire   PROTO  :PTR Bullets, :PTR Hero
 BulletsMove PROTO
+
+UnicodeStr	PROTO :DWORD,:DWORD
+StrConcat	PROTO :PTR BYTE,:PTR BYTE
+isHeroOutofScreen PROTO :PTR Hero
 
 DISPLAY_SCALE EQU 2
 
@@ -54,6 +58,8 @@ IDR_WAVE1 EQU 104
  bulletFiles  db "Res\\bullet\\bullet", 0
  towerFiles db "Res\\barbette\\barbette", 0
  towerShowupFiles db "Res\\barbette\\barbette_showup", 0
+ towerBoomFiles db "Res\\barbette\\barbette_die_", 0
+ bridgeBoomFiles db "Res\\others\\bridge_boom_", 0
 
  staticRobotShootRightFiles db "Res\\npc\\npc1_right", 0
  staticRobotShootRightDownFiles db "Res\\npc\\npc1_rightdown", 0
@@ -65,10 +71,10 @@ IDR_WAVE1 EQU 104
  staticRobotDieLeftFiles db  "Res\\npc\\npc1_die_left", 0
 
  dynamicRobotRunRightFiles db "Res\\npc\\npc2_right", 0
- dynamicRobotJumpRightFile db "Res\\npc\\npc2_right1.png", 0
+ dynamicRobotJumpRightFile db "Res\\npc\\npc2_jump_right.png", 0
  dynamicRobotDieRightFiles db "Res\\npc\\npc2_die_right", 0
  dynamicRobotRunLeftFiles db "Res\\npc\\npc2_left", 0
- dynamicRobotJumpLeftFile db "Res\\npc\\npc2_left1.png", 0
+ dynamicRobotJumpLeftFile db "Res\\npc\\npc2_jump_left.png", 0
  dynamicRobotDieLeftFiles db "Res\\npc\\npc2_die_left", 0
 
 ;============================== Window Params =========
@@ -129,6 +135,10 @@ IDR_WAVE1 EQU 104
 
  hTowerImages dd 12 dup (?)
  hTowerShowupImages dd 4 dup (?)
+ hTowerBoomImages dd 3 dup (?)
+
+ hBridgeBoomImages dd 3 dup (?)
+
  hBulletImages dd 4 dup (?)
 
  hMusic dd ?

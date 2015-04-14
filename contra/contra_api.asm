@@ -382,6 +382,7 @@ InitMap ENDP
 
 InitEvents PROC USES esi edi,events:PTR Events
 	mov esi, events
+	mov [esi].Events.number, 0
 	lea edi, [esi].Events.events
 
 	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
@@ -437,21 +438,56 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 900-520
-	mov [edi].Event.position.pos_x, 520
-	mov [edi].Event.position.pos_y, 200
-	inc [esi].Events.number
-	add edi, TYPE Event
-	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
-	mov [edi].Event.actor, 0
-	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 2020-520
-	mov [edi].Event.position.pos_x, 520
-	mov [edi].Event.position.pos_y, 300
+	mov [edi].Event.location_limit, 2496-480
+	mov [edi].Event.position.pos_x, 480
+	mov [edi].Event.position.pos_y, 256
 	inc [esi].Events.number
 	add edi, TYPE Event
 
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 3072-480
+	mov [edi].Event.position.pos_x, 480
+	mov [edi].Event.position.pos_y, 192
+	inc [esi].Events.number
+	add edi, TYPE Event
 	
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 3712-480
+	mov [edi].Event.position.pos_x, 480
+	mov [edi].Event.position.pos_y, 160
+	inc [esi].Events.number
+	add edi, TYPE Event
+	
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 6016-480
+	mov [edi].Event.position.pos_x, 480
+	mov [edi].Event.position.pos_y, 320
+	inc [esi].Events.number
+	add edi, TYPE Event
+	
+	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 6272-480
+	mov [edi].Event.position.pos_x, 480
+	mov [edi].Event.position.pos_y, 320
+	inc [esi].Events.number
+	add edi, TYPE Event
+
+	 mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 600-520
+	mov [edi].Event.position.pos_x, 520
+	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+	add edi, TYPE Event
 	ret
 	
 InitEvents ENDP
@@ -464,8 +500,8 @@ ResetStat ENDP
 InitContra PROC USES esi,
 	 hero:PTR Hero
 	mov esi, hero
-	mov [esi].Hero.position.pos_x, -2
-	mov [esi].Hero.position.pos_y, 0
+	mov [esi].Hero.position.pos_x, 0
+	mov [esi].Hero.position.pos_y, -100
 	mov [esi].Hero.action, HEROACTION_JUMP
 	mov [esi].Hero.move_dx, 0
 	mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
@@ -777,15 +813,15 @@ SetWeapon	PROC	USES esi,
 		mov     [esi].Weapon.triple_bullet,      0
 		mov     [esi].Weapon.bullet_speed ,      25
 	.elseif w_type == WEAPONTYPE_ROBOT
-		mov		[esi].Weapon.shot_interval_time, 5
+		mov		[esi].Weapon.shot_interval_time, 3
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      18
-		mov     [esi].Weapon.bullet_speed ,      18
+		mov     [esi].Weapon.bullet_speed ,      13
 	.elseif w_type == WEAPONTYPE_S
 		mov		[esi].Weapon.shot_interval_time, 2
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      1
-		mov     [esi].Weapon.triple_bullet,      25
+		mov     [esi].Weapon.bullet_speed,      25
 	.else
 	.endif
 
