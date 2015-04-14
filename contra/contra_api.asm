@@ -27,8 +27,8 @@ CollisionEnemyJudge		PROC hero:PTR Hero,robots:PTR Robots
 
 	mov index,0
 L1:
+	mov eax,0
 	.if	[edi].Hero.action != HEROACTION_DIE
-		mov	eax,0		
 		invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Hero.range
 	.endif
 	.if	eax == 1
@@ -36,8 +36,8 @@ L1:
 	.endif
 	add	edi,c_offset
 	inc index
-	mov	eax,index
-	.if eax >= robotnumber
+	mov	ecx,index
+	.if ecx >= robotnumber
 		jmp quit
 	.endif
 	jmp L1
