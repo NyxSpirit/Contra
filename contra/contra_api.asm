@@ -480,12 +480,30 @@ InitEvents PROC USES esi edi,events:PTR Events
 	inc [esi].Events.number
 	add edi, TYPE Event
 
-	 mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
+	mov [edi].Event.e_type, EVENTTYPE_CREATEDYNAMICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 600-520
 	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+	add edi, TYPE Event
+
+	mov [edi].Event.e_type, EVENTTYPE_BRIDGEBOOM
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 1536-200
+	mov [edi].Event.position.pos_x, 200
+	mov [edi].Event.position.pos_y, 192
+	inc [esi].Events.number
+	add edi, TYPE Event
+
+	mov [edi].Event.e_type, EVENTTYPE_BRIDGEBOOM
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 2112-200
+	mov [edi].Event.position.pos_x, 200
+	mov [edi].Event.position.pos_y, 192
 	inc [esi].Events.number
 	add edi, TYPE Event
 	ret
@@ -832,13 +850,13 @@ InitBridges PROC  USES esi,
     bridge :PTR Bridge
 	
 	mov esi, bridge
-	mov [esi].Bridge.position.pos_x, 2000
-	mov [esi].Bridge.position.pos_y, 200
+	mov [esi].Bridge.position.pos_x, 1536
+	mov [esi].Bridge.position.pos_y, 192
 	mov [esi].Bridge.action_index, 0
 		
 	add esi, TYPE Bridge
-	mov [esi].Bridge.position.pos_x, 2000
-	mov [esi].Bridge.position.pos_y, 200
+	mov [esi].Bridge.position.pos_x, 2112
+	mov [esi].Bridge.position.pos_y, 192
 	mov [esi].Bridge.action_index, 0
 	ret
 InitBridges ENDP
@@ -1190,5 +1208,7 @@ L1:
 	ret
 CheckBridgeBomb	ENDP
 
-
+DeleteBridgeBlock PROC USES esi,
+	bridge: PTR Bridge, index : DWORD
+DeleteBridgeBlock ENDP
 END

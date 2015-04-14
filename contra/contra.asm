@@ -93,6 +93,7 @@ CmdShow:DWORD
 	local index:DWORD
 	local newRobot: PTR Hero
 	local startTime: DWORD
+	local cnt :DWORD
 	mov ecx, eventQueue.number
 	.if ecx == 0
 		ret
@@ -169,10 +170,31 @@ CmdShow:DWORD
 					.if [esi].Event.actor > 0
 						add edi, TYPE Bridge
 					.endif
-					mov ecx, [edi].Bridge.action_index
-
 					inc [edi].Bridge.action_index
-										
+					mov ecx, [edi].Bridge.action_index
+					.if ecx < 16
+						mov cnt, 0
+						.while ecx > 0
+							.if ecx > 3
+								sub ecx, 3
+								mov ebx, 3	 
+							.else 
+								mov ebx, ecx
+								mov ecx, 0
+								
+								invoke DeleteBridgeBlock, edi, cnt 
+							.endif
+							mov eax, hBridgeBoomImages[ebx * TYPE DWORD]
+							mov ebx, cnt
+							mov [edi].Bridge.hImages[ebx * TYPE DWORD], eax
+							inc cnt
+						.endw
+					
+						mov ebx, clock
+						mov startTime, ebx
+						inc startTime
+						invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, [esi].Event.actor,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y			
+					.endif
 				.endif
 @@:			; End execution:
 				
@@ -263,7 +285,7 @@ CmdShow:DWORD
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerFiles, 11, addr hTowerImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerBoomFiles, 3, addr hTowerBoomImages, ADDR IMAGETYPE_PNG
-		invoke LoadImageSeries, ADDR bridgeBoomFiles, 3, addr hBridgeBoomImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR bridgeBoomFiles, 4, addr hBridgeBoomImages, ADDR IMAGETYPE_PNG
 
 
 		; ==========LoadImageResources end

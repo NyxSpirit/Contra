@@ -59,7 +59,7 @@ IDR_WAVE1 EQU 104
  towerFiles db "Res\\barbette\\barbette", 0
  towerShowupFiles db "Res\\barbette\\barbette_showup", 0
  towerBoomFiles db "Res\\barbette\\barbette_die_", 0
- bridgeBoomFiles db "Res\\others\\bridge_boom_", 0
+ bridgeBoomFiles db "Res\\other\\bridge_boom_", 0
 
  staticRobotShootRightFiles db "Res\\npc\\npc1_right", 0
  staticRobotShootRightDownFiles db "Res\\npc\\npc1_rightdown", 0
@@ -138,7 +138,7 @@ IDR_WAVE1 EQU 104
  hTowerShowupImages dd 4 dup (?)
  hTowerBoomImages dd 3 dup (?)
 
- hBridgeBoomImages dd 3 dup (?)
+ hBridgeBoomImages dd 4 dup (?)
 
  hBulletImages dd 4 dup (?)
 

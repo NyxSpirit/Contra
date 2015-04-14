@@ -269,4 +269,5 @@ TowerDamage		PROTO	:PTR Tower
 
 InitBridges      PROTO   :PTR Bridge
 CheckBridgeBomb PROTO	:PTR Hero,:PTR Background
+DeleteBridgeBlock PROTO :PTR Bridge, :DWORD
 ENDIF
