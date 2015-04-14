@@ -180,8 +180,15 @@ CmdShow:DWORD
    LOCAL rect:RECT 
    LOCAL hGraphics: DWORD
    LOCAL buffer [64] :BYTE
-   .if uMsg == WM_CREATE
-		
+
+   .if	uMsg == WM_CREATE && wndstart == CONTRA_STATE_NULL
+		mov startupinput.GdiplusVersion, 1 
+		invoke GdiplusStartup, addr token, addr startupinput, NULL
+		invoke UnicodeStr, ADDR  contraLoadingImage1, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hContraLoadingImage1
+   .elseif wndstart == CONTRA_STATE_START
+
+		mov	wndstart,CONTRA_STATE_RUNNING	
 		mov startupinput.GdiplusVersion, 1 
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 		
@@ -235,9 +242,6 @@ CmdShow:DWORD
 		invoke UnicodeStr, ADDR  dynamicRobotJumpLeftFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr  hDynamicRobotJumpLeftImage
 
-		invoke LoadImageSeries, ADDR towerFiles, 12, addr hTowerImages, ADDR IMAGETYPE_PNG
-		invoke LoadImageSeries, ADDR towerShowupFiles, 4, addr hTowerShowupImages, ADDR IMAGETYPE_PNG
-		
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 
 		; ==========LoadImageResources end
@@ -255,7 +259,7 @@ CmdShow:DWORD
 		invoke CreateThread, 0, 0, RunProc, hWnd,0, ADDR dwThreadID
 		mov hRunThread, eax
 
-   .elseif uMsg == WM_PAINT 
+   .elseif uMsg == WM_PAINT && wndstart == CONTRA_STATE_RUNNING
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
 		invoke CreateCompatibleDC, hdc
@@ -274,9 +278,24 @@ CmdShow:DWORD
 		
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
+	.elseif uMsg == WM_PAINT && wndstart == CONTRA_STATE_NULL
+		invoke BeginPaint,hWnd,addr ps 
+		mov hdc, eax
+		invoke CreateCompatibleDC, hdc
+		mov hMemDC, eax
 
-	.elseif uMsg == WM_KEYDOWN 
+		invoke GdipCreateFromHDC, hdc, addr hGraphics 
+		invoke GdipSetPageUnit, hGraphics, UnitPixel
+
+		invoke PaintLoading, hGraphics
+
+		invoke GdipDeleteGraphics, hGraphics
+		
+		invoke DeleteDC, hMemDC
+		invoke EndPaint,hWnd,addr ps
+	.elseif uMsg == WM_KEYDOWN && wndstart == CONTRA_STATE_RUNNING	
 		invoke GetKeyboardState, addr keyState 
+		
 		.if keyState[VK_D] >= 128
 			invoke TakeAction, addr contra, CMD_MOVERIGHT
 		.elseif keyState[VK_A] >= 128
@@ -323,7 +342,16 @@ CmdShow:DWORD
 			mov contra.shoot_dy, eax
 			invoke TakeAction, addr contra, CMD_SHOOT
 		.endif
-	.elseif uMsg == WM_KEYUP
+	.elseif uMsg == WM_KEYUP && wndstart == CONTRA_STATE_RUNNING	
+		
+		.if wParam == VK_ESCAPE
+			mov	wndstart,CONTRA_STATE_NULL
+			invoke DeleteObject, hMusic
+			invoke CloseHandle,hBGMThread
+			invoke CloseHandle,hRunThread
+			invoke GdiplusShutdown, token
+		.endif
+
 		.if wParam == VK_D			
 			jmp @f
 		.elseif wParam == VK_A
@@ -344,7 +372,11 @@ CmdShow:DWORD
 			invoke TakeAction, addr contra, CMD_CANCELCRAWL
 		.endif
 
-	.elseif uMsg == WM_DESTROY
+	.elseif uMsg == WM_KEYUP &&  wndstart == CONTRA_STATE_NULL
+		.if	wParam == VK_RETURN
+			mov wndstart,1
+		.endif
+	.elseif uMsg == WM_DESTROY && wndstart == CONTRA_STATE_RUNNING	
 		invoke DeleteObject, hMusic
 		invoke CloseHandle,hBGMThread
 		invoke CloseHandle,hRunThread
@@ -539,10 +571,24 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintBackground ENDP
 
+<<<<<<< HEAD
 
 ; ============================================= Action Logic ======================================================= 
 ; ;;;;;;;;;
 ;;;;;;;;;;;
+=======
+ PaintLoading PROC, hGraphics:DWORD
+	local imageWidth :DWORD   
+	local imageHeight:DWORD
+	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
+	invoke GdipGetImageWidth, hContraLoadingImage1, addr imageWidth
+	invoke GdipGetImageHeight, hContraLoadingImage1, addr imageHeight
+	invoke GdipDrawImageRectI, hGraphics, hContraLoadingImage1, 0 ,0, imageWidth , imageHeight
+
+	ret
+ PaintLoading ENDP
+
+>>>>>>> 64a781fc22d607d07e567cc8bb1cc462c26c3615
  ContraTakeAction PROC
 	.if contra.action == HEROACTION_DIE
 		.if contra.face_direction == DIRECTION_RIGHT

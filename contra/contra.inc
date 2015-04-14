@@ -9,6 +9,7 @@ StrConcat	PROTO :PTR BYTE,:PTR BYTE
 LoadImageSeries PROTO : DWORD, : BYTE,  : DWORD,  : DWORD
 LoadImageResources PROTO 
 PaintBackground PROTO :DWORD
+PaintLoading PROTO :DWORD
 PaintObjects PROTO :DWORD
 PaintObject PROTO :DWORD, :DWORD
 
@@ -31,6 +32,7 @@ IDR_WAVE1 EQU 104
  IMAGETYPE_PNG db "png", 0
  
  backgroundFile db "Res\\map\\map_stage1.bmp",0
+ contraLoadingImage1 db "Res\\opening.bmp",0
 
  playerMoveRightFiles db "Res\\player\\player_right",0
  playerMoveLeftFiles db "Res\\player\\player_left", 0
@@ -84,10 +86,12 @@ IDR_WAVE1 EQU 104
  eventQueue Events <>
  
  clock		DWORD	0
+ wndstart	DWORD	0
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
  hBackgroundImage dd ?
+ hContraLoadingImage1 dd ?
 
  hPlayerCrawlRightImage dd ?
  hPlayerCrawlLeftImage dd ?
