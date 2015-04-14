@@ -93,6 +93,7 @@ IDR_WAVE1 EQU 104
  
  clock		DWORD	0
  wndstart	DWORD	0
+ wndover	DWORD	0
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
