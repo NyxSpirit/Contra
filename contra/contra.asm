@@ -185,7 +185,11 @@ CmdShow:DWORD
 								dec ebx
 								mov cnt, 0
 								
+<<<<<<< HEAD
 								invoke DeleteBridgeBlock, edi, index1
+=======
+								invoke DeleteBridgeBlock, edi,addr contra , addr background,cnt 
+>>>>>>> a1c9a060605fc01f82778ecc113cd3e88a19f8fc
 							.endif
 							mov eax, hBridgeBoomImages[ebx * TYPE DWORD]
 							mov ebx, index1
