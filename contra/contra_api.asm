@@ -33,6 +33,8 @@ L1:
 	.endif
 	.if	eax == 1
 		invoke UpdateHeroAction,hero,HEROACTION_DIE 
+		mov	esi,hero
+		sub	[esi].Hero.life,1
 	.endif
 	add	edi,c_offset
 	inc index
@@ -69,6 +71,8 @@ L1:
 	invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Bullet.range
 	.if	eax == 1
 		invoke UpdateHeroAction,hero,HEROACTION_DIE 
+		mov	esi,hero
+		sub	[esi].Hero.life,1
 		invoke DeleteBullet,bullets,index
 	.endif
 	add	edi,c_offset
@@ -128,6 +132,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	.if		ebx >= 410 && bl == 0
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
+			mov	[esi].Hero.life,1
 			mov	[esi].Hero.position.pos_y,350
 			mov	[esi].Hero.move_dx,0
 			mov	[esi].Hero.move_dy,0
@@ -156,6 +161,10 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 			sub eax,95
 			mov	[esi].Hero.position.pos_y,eax
 			mov	[esi].Hero.move_dy,0
+			ret
+		.endif
+		.if [esi].Hero.move_dx != 0 && [esi].Hero.action == HEROACTION_STAND
+			invoke	UpdateHeroAction,hero, HEROACTION_RUN
 			ret
 		.endif
 	.elseif	bl == BGTYPE_BRIDGE

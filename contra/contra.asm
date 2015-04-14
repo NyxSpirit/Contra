@@ -226,6 +226,8 @@ CmdShow:DWORD
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 		invoke UnicodeStr, ADDR  contraLoadingImage1, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr  hContraLoadingImage1
+		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
+		mov hBGMThread, eax
    .elseif wndstart == CONTRA_STATE_START
 
 		mov	wndstart,CONTRA_STATE_RUNNING	
@@ -390,6 +392,8 @@ CmdShow:DWORD
 			invoke CloseHandle,hBGMThread
 			invoke CloseHandle,hRunThread
 			invoke GdiplusShutdown, token
+		.elseif	wParam == VK_F1
+			mov	contra.life,30
 		.endif
 
 		.if wParam == VK_D			
