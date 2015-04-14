@@ -186,14 +186,12 @@ Tower	STRUCT
 	life	DWORD	5
 Tower	ENDS
 ;=================================
-
+BRIDGE_WIDTH  EQU  64
 ;=================================
 Bridge	STRUCT
 	position	Position	<>
-	ALIGN	CollisionRect
-	range	CollisionRect	<>
-	hImage	DWORD     0
-	bomb	BYTE	0	
+	hImages		DWORD    4 dup (0)
+	action_index  DWORD 0
 Bridge	ENDS
 ;=================================
 
@@ -269,6 +267,6 @@ ChangeTowerDirection	PROTO	:PTR Tower,:DWORD
 TowerShoot		PROTO	:PTR Tower,:DWORD
 TowerDamage		PROTO	:PTR Tower
 
-BridgeBomb		PROTO	:PTR Bridge
+InitBridges      PROTO   :PTR Bridge
 CheckBridgeBomb PROTO	:PTR Hero,:PTR Background
 ENDIF

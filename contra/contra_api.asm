@@ -556,7 +556,7 @@ CreateRobot PROC USES esi,
 		mov [esi].Hero.shoot_dy, 0
 		mov [esi].Hero.life, 1
 	.elseif r_type == HEROTYPE_DYNAMICROBOT
-		mov [esi].Hero.action, HEROACTION_FALL
+		mov [esi].Hero.action, HEROACTION_STAND
 		mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
 		mov [esi].Hero.move_dy, 0
 		mov [esi].Hero.life, 1
@@ -837,13 +837,20 @@ SetWeapon	PROC	USES esi,
 	ret
 SetWeapon	ENDP
 ;==================================
-
-;==================================
-BridgeBomb	PROC	bridge:PTR Bridge
-	mov		esi,bridge
-	mov		[esi].Bridge.bomb,1
+InitBridges PROC  USES esi,
+    bridge :PTR Bridge
+	
+	mov esi, bridge
+	mov [esi].Bridge.position.pos_x, 2000
+	mov [esi].Bridge.position.pos_y, 200
+	mov [esi].Bridge.action_index, 0
+		
+	add esi, TYPE Bridge
+	mov [esi].Bridge.position.pos_x, 2000
+	mov [esi].Bridge.position.pos_y, 200
+	mov [esi].Bridge.action_index, 0
 	ret
-BridgeBomb	ENDP
+InitBridges ENDP
 ;==================================
 
 ;==================================

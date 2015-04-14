@@ -90,7 +90,8 @@ IDR_WAVE1 EQU 104
  staticRobotQueue Robots <>
  towerQueue Robots <>
  eventQueue Events <>
- 
+ bridges    Bridge <>
+
  clock		DWORD	0
  wndstart	DWORD	0
  wndover	DWORD	0

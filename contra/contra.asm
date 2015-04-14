@@ -74,11 +74,8 @@ CmdShow:DWORD
  RunProc PROC hWnd:HWND
 	LOCAL rect: RECT 
 	.while TRUE
-
-		invoke ContraTakeAction
-
 		invoke HandleEvents
-		
+		invoke ContraTakeAction
 		invoke DynamicRobotsTakeAction 
 		invoke StaticRobotsTakeAction
 		invoke TowerTakeAction
@@ -155,8 +152,6 @@ CmdShow:DWORD
 					mov startTime, ebx
 					add startTime, 20
 					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_CREATEDYNAMICROBOT, 0, startTime, 0, SCREEN_WIDTH, 20
-						
-
 				.elseif [esi].Event.e_type == EVENTTYPE_CREATETOWER
 					invoke CreateRobot, addr towerQueue, HEROTYPE_TOWER,  [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					mov edi, eax
@@ -170,8 +165,14 @@ CmdShow:DWORD
 					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, edi,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 				
 				.elseif [esi].Event.e_type == EVENTTYPE_BRIDGEBOOM
-					
-				
+					lea edi, bridges
+					.if [esi].Event.actor > 0
+						add edi, TYPE Bridge
+					.endif
+					mov ecx, [edi].Bridge.action_index
+
+					inc [edi].Bridge.action_index
+										
 				.endif
 @@:			; End execution:
 				
@@ -432,6 +433,7 @@ InitGame PROC
 
 	ret
 InitGame ENDP
+
 LoadImageResources PROC
 	local buffer [64] :BYTE
 	
@@ -576,14 +578,94 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintObject ENDP
 
- PaintBackground PROC, hGraphics:DWORD
+ PaintBackground PROC uses esi edi, hGraphics:DWORD
 	local imageWidth :DWORD   
 	local imageHeight:DWORD
+	local hImage :PTR DWORD
+	local posx   :SDWORD
+	local posy   :SDWORD
 	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
 	invoke GdipGetImageWidth, hBackgroundImage, addr imageWidth
 	invoke GdipGetImageHeight, hBackgroundImage, addr imageHeight
 	invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, imageWidth , imageHeight
 
+	;================ paint bridges
+	lea esi, bridges
+	lea edi, [esi].Bridge.hImages
+	mov hImage, edi
+	mov eax, [esi].Bridge.position.pos_x
+	mov posx,   eax
+	mov eax, background.b_offset
+	add posx,   eax
+	mov eax, [esi].Bridge.position.pos_y
+	mov posy,   eax
+	mov imageWidth , 64
+	mov imageHeight , 100
+	
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax != 0
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	.endif
+	.endif
+	.endif
+	.endif
+
+	lea esi, bridges
+	add esi, TYPE Bridge
+	mov eax, [esi].Bridge.position.pos_x
+	mov posx,   eax
+	mov eax, background.b_offset
+	add posx,   eax
+	mov eax, [esi].Bridge.position.pos_y
+	mov posy,   eax
+	mov imageWidth , 64
+	mov imageHeight , 100
+	
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax != 0
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	add hImage, TYPE DWORD
+	mov edi, hImage
+	mov eax, [edi]
+	.if eax!= 0
+	add posx, BRIDGE_WIDTH
+	invoke GdipDrawImageRectI, hGraphics, eax, posx , posy, imageWidth , imageHeight
+	.endif
+	.endif
+	.endif
+	.endif
 	ret
  PaintBackground ENDP
 
@@ -594,7 +676,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke GdipGetImageWidth, hContraLoadingImage1, addr imageWidth
 	invoke GdipGetImageHeight, hContraLoadingImage1, addr imageHeight
 	invoke GdipDrawImageRectI, hGraphics, hContraLoadingImage1, 0 ,0, imageWidth , imageHeight
-
+	
 	ret
  PaintLoading ENDP
 
