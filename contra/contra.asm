@@ -155,6 +155,10 @@ CmdShow:DWORD
 					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSHOOT, edi, startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					add startTime, ROBOT_SHOOT_LASTTIME
 					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, edi,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y
+				
+				.elseif [esi].Event.e_type == EVENTTYPE_BRIDGEBOOM
+					
+				
 				.endif
 @@:			; End execution:
 				
@@ -243,7 +247,7 @@ CmdShow:DWORD
 		invoke GdipLoadImageFromFile, addr buffer, addr  hDynamicRobotJumpLeftImage
 
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
-
+		invoke LoadImageSeries, ADDR towerFiles, 11, addr hTowerImages, ADDR IMAGETYPE_PNG
 		; ==========LoadImageResources end
 
 		; ==========init game params
@@ -571,13 +575,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintBackground ENDP
 
-<<<<<<< HEAD
-
-; ============================================= Action Logic ======================================================= 
-; ;;;;;;;;;
-;;;;;;;;;;;
-=======
- PaintLoading PROC, hGraphics:DWORD
+  PaintLoading PROC, hGraphics:DWORD
 	local imageWidth :DWORD   
 	local imageHeight:DWORD
 	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
@@ -588,7 +586,10 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintLoading ENDP
 
->>>>>>> 64a781fc22d607d07e567cc8bb1cc462c26c3615
+; ============================================= Action Logic ======================================================= 
+; ;;;;;;;;;
+;;;;;;;;;;;
+
  ContraTakeAction PROC
 	.if contra.action == HEROACTION_DIE
 		.if contra.face_direction == DIRECTION_RIGHT
