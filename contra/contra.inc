@@ -3,6 +3,7 @@ include contra_api.inc
 
 WinMain		PROTO :DWORD, :DWORD, :DWORD, :DWORD 
 SoundProc   PROTO
+OpeningSoundProc	PROTO
 
 
 InitGame    PROTO
@@ -29,6 +30,7 @@ isHeroOutofScreen PROTO :PTR Hero
 DISPLAY_SCALE EQU 2
 
 IDR_WAVE1 EQU 104
+IDR_WAVE2 EQU 107
 .data
 ;============================== resources declarment=============\
 

@@ -233,8 +233,7 @@ CmdShow:DWORD
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 		invoke UnicodeStr, ADDR  contraLoadingImage1, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr  hContraLoadingImage1
-		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
-		mov hBGMThread, eax
+ 		invoke PlaySound, IDR_WAVE2, hInstance,SND_RESOURCE or SND_ASYNC
    .elseif wndstart == CONTRA_STATE_START
 
 		mov	wndstart,CONTRA_STATE_RUNNING	
@@ -515,6 +514,11 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
 	ret
  SoundProc ENDP
+
+ OpeningSoundProc PROC
+	invoke PlaySound, IDR_WAVE2, hInstance,SND_RESOURCE or SND_ASYNC
+	ret
+ OpeningSoundProc ENDP
  
  PaintObjects PROC USES ecx esi,
 	 hGraphics:DWORD
@@ -701,7 +705,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	ret
  PaintBackground ENDP
 
-  PaintLoading PROC, hGraphics:DWORD
+ PaintLoading PROC, hGraphics:DWORD
 	local imageWidth :DWORD   
 	local imageHeight:DWORD
 	;invoke GdipDrawImageRectI, hGraphics, hBackgroundImage, background.b_offset ,0, BACKGROUNDIMAGE_UNITWIDTH * DISPLAY_SCALE, BACKGROUNDIMAGE_HEIGHT * DISPLAY_SCALE 
