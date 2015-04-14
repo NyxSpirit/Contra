@@ -508,7 +508,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	add edi, TYPE Event
 
 	mov [edi].Event.e_type, EVENTTYPE_BRIDGEBOOM
-	mov [edi].Event.actor, 0
+	mov [edi].Event.actor, 1
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 2112-200
 	mov [edi].Event.position.pos_x, 200
@@ -1219,5 +1219,6 @@ CheckBridgeBomb	ENDP
 
 DeleteBridgeBlock PROC USES esi,
 	bridge: PTR Bridge, index : DWORD
+	ret
 DeleteBridgeBlock ENDP
 END

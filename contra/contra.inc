@@ -90,7 +90,7 @@ IDR_WAVE1 EQU 104
  staticRobotQueue Robots <>
  towerQueue Robots <>
  eventQueue Events <>
- bridges    Bridge <>
+ bridges    Bridge 2 dup(<>)
 
  clock		DWORD	0
  wndstart	DWORD	0

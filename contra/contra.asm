@@ -91,6 +91,7 @@ CmdShow:DWORD
  
  HandleEvents PROC USES esi edi ecx
 	local index:DWORD
+	local index1:DWORD
 	local newRobot: PTR Hero
 	local startTime: DWORD
 	local cnt :DWORD
@@ -173,30 +174,32 @@ CmdShow:DWORD
 					inc [edi].Bridge.action_index
 					mov ecx, [edi].Bridge.action_index
 					.if ecx < 16
-						mov cnt, 0
-						.while ecx > 0
-							.if ecx > 3
-								sub ecx, 3
+						mov cnt, ecx
+						mov index1, 0
+						.while cnt > 0
+							.if cnt > 3
+								sub cnt, 3
 								mov ebx, 3	 
 							.else 
-								mov ebx, ecx
-								mov ecx, 0
+								mov ebx, cnt
+								dec ebx
+								mov cnt, 0
 								
-								invoke DeleteBridgeBlock, edi, cnt 
+								invoke DeleteBridgeBlock, edi, index1
 							.endif
 							mov eax, hBridgeBoomImages[ebx * TYPE DWORD]
-							mov ebx, cnt
+							mov ebx, index1
 							mov [edi].Bridge.hImages[ebx * TYPE DWORD], eax
-							inc cnt
+							inc index1
 						.endw
 					
 						mov ebx, clock
 						mov startTime, ebx
 						inc startTime
-						invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_ROBOTSTOPSHOOT, [esi].Event.actor,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y			
+						invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_BRIDGEBOOM, [esi].Event.actor,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y			
 					.endif
 				.endif
-@@:			; End execution:
+			; End execution:
 				
 			invoke DeleteEvent, addr eventQueue, index
 			.endif
@@ -443,6 +446,7 @@ InitGame PROC
 	invoke InitContra, addr contra 
 	invoke InitEvents, addr eventQueue
 	invoke InitMap, addr background
+	invoke InitBridges, addr bridges
 
 	mov staticRobotQueue.number, 0
 	mov dynamicRobotQueue.number, 0
@@ -653,6 +657,8 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 	lea esi, bridges
 	add esi, TYPE Bridge
+	lea edi, [esi].Bridge.hImages
+	mov hImage, edi
 	mov eax, [esi].Bridge.position.pos_x
 	mov posx,   eax
 	mov eax, background.b_offset
