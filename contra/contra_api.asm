@@ -27,7 +27,10 @@ CollisionEnemyJudge		PROC hero:PTR Hero,robots:PTR Robots
 
 	mov index,0
 L1:
-	invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Hero.range
+	.if	[edi].Hero.action != HEROACTION_DIE
+		mov	eax,0		
+		invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Hero.range
+	.endif
 	.if	eax == 1
 		invoke UpdateHeroAction,hero,HEROACTION_DIE 
 	.endif
@@ -84,7 +87,6 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	LOCAL	rect_down:CollisionRect,rect_right:CollisionRect,rect_left:CollisionRect,
 			x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,fall_speed:DWORD,divisor:DWORD
-	;0:air,1:water,2:ground,3:bridge
 	
 	mov		esi,hero
 	.if		[esi].Hero.move_dy < 0
@@ -196,6 +198,8 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 		.else
 		.endif
 	.endif
+
+	invoke CheckBridgeBomb,hero,background
 	ret
 CollisionBackgroundJudge	ENDP
 ;================================
@@ -1067,5 +1071,59 @@ ChangeHeroRect	PROC	USES esi,
 
 	ret
 ChangeHeroRect	ENDP
+
+CheckBridgeBomb	PROC	USES esi,
+	hero:PTR Hero,background:PTR Background
+	Local img_width:DWORD,img_height:DWORD,position:SDWORD,x:SDWORD,y:SDWORD,divisor:DWORD
+	mov		esi,hero
+	mov		img_width,BACKGROUNDIMAGE_UNITWIDTH
+	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
+	
+	mov		edx,0
+	mov		eax,[esi].Hero.range.r_width
+	mov		divisor,2
+	div		divisor
+	add		eax,[esi].Hero.range.position.pos_x	;half of image width
+
+	mov		ebx,[esi].Hero.range.position.pos_y
+	add		ebx,[esi].Hero.range.r_height	;contra image height
+	mov		ecx,background	
+
+	;down block
+	mov		edx,0
+	sub		eax,[ecx].Background.b_offset
+	div		img_width
+	mov		x,eax
+
+	mov		edx,0
+	mov		eax,ebx
+	div		img_height
+	mov		y,eax
+
+	mov		eax,BACKGROUNDTOTALWIDTH
+	mul		y
+	add		eax,x
+	mov		position,eax
+
+	mov		ecx,background
+	mov		eax,position
+	mov		bl,[ecx].Background.b_array[eax]
+
+L1:
+	.if	bl == BGTYPE_BRIDGE
+		mov	esi,background
+		mov	eax,position
+		mov	[esi].Background.b_array[eax],0
+		;Bomb Bridge
+	.endif
+	.if position > BACKGROUNDTOTALWIDTH
+		mov	eax,position
+		sub eax,BACKGROUNDTOTALWIDTH
+		mov	position,eax
+		jmp L1
+	.endif
+	ret
+CheckBridgeBomb	ENDP
+
 
 END
