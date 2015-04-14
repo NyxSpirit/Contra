@@ -271,4 +271,5 @@ TowerShoot		PROTO	:PTR Tower,:DWORD
 TowerDamage		PROTO	:PTR Tower
 
 BridgeBomb		PROTO	:PTR Bridge
+CheckBridgeBomb PROTO	:PTR Hero,:PTR Background
 ENDIF
