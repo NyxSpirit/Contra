@@ -207,8 +207,6 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 		.else
 		.endif
 	.endif
-
-	invoke CheckBridgeBomb,hero,background
 	ret
 CollisionBackgroundJudge	ENDP
 ;================================
@@ -1164,31 +1162,29 @@ ChangeHeroRect	PROC	USES esi,
 	ret
 ChangeHeroRect	ENDP
 
-CheckBridgeBomb	PROC	USES esi,
-	hero:PTR Hero,background:PTR Background
-	Local img_width:DWORD,img_height:DWORD,position:SDWORD,x:SDWORD,y:SDWORD,divisor:DWORD
-	mov		esi,hero
+DeleteBridgeBlock PROC USES esi,
+	bridge: PTR Bridge,mhero : PTR Hero,background:PTR Background, index : DWORD
+	LOCAL	x:SDWORD,y:SDWORD,position:SDWORD,img_width:DWORD,img_height:DWORD,divisor:DWORD
+	
+	mov		esi,mhero
 	mov		img_width,BACKGROUNDIMAGE_UNITWIDTH
 	mov		img_height,BACKGROUNDIMAGE_UNITHEIGHT
+	mov		ecx,background
 	
 	mov		edx,0
-	mov		eax,[esi].Hero.range.r_width
-	mov		divisor,2
-	div		divisor
-	add		eax,[esi].Hero.range.position.pos_x	;half of image width
-
-	mov		ebx,[esi].Hero.range.position.pos_y
-	add		ebx,[esi].Hero.range.r_height	;contra image height
-	mov		ecx,background	
-
-	;down block
-	mov		edx,0
+	mov		eax,[esi].Hero.position.pos_x	;half of image width	
 	sub		eax,[ecx].Background.b_offset
+	.if		eax < 2000
+			mov	eax,1536
+	.else
+			mov	eax,2112
+	.endif
 	div		img_width
+	add		eax,index
 	mov		x,eax
 
+	mov		eax,192
 	mov		edx,0
-	mov		eax,ebx
 	div		img_height
 	mov		y,eax
 
@@ -1199,25 +1195,8 @@ CheckBridgeBomb	PROC	USES esi,
 
 	mov		ecx,background
 	mov		eax,position
-	mov		bl,[ecx].Background.b_array[eax]
+	mov		[ecx].Background.b_array[eax],0
 
-L1:
-	.if	bl == BGTYPE_BRIDGE
-		mov	esi,background
-		mov	eax,position
-		mov	[esi].Background.b_array[eax],0
-		;Bomb Bridge
-	.endif
-	.if position > BACKGROUNDTOTALWIDTH
-		mov	eax,position
-		sub eax,BACKGROUNDTOTALWIDTH
-		mov	position,eax
-		jmp L1
-	.endif
 	ret
-CheckBridgeBomb	ENDP
-
-DeleteBridgeBlock PROC USES esi,
-	bridge: PTR Bridge, index : DWORD
 DeleteBridgeBlock ENDP
 END
