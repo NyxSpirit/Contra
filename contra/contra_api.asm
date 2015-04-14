@@ -384,7 +384,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov esi, events
 	lea edi, [esi].Events.events
 
-	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
+	mov [edi].Event.e_type, EVENTTYPE_CREATESTATICROBOT
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
 	mov [edi].Event.location_limit, 120
@@ -437,7 +437,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 700-520
+	mov [edi].Event.location_limit, 900-520
 	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 200
 	inc [esi].Events.number
@@ -445,7 +445,7 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATETOWER
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 900-520
+	mov [edi].Event.location_limit, 2020-520
 	mov [edi].Event.position.pos_x, 520
 	mov [edi].Event.position.pos_y, 300
 	inc [esi].Events.number
@@ -522,6 +522,9 @@ CreateRobot PROC USES esi,
 		mov [esi].Hero.invincible_time, 0
 		mov [esi].Hero.shoot, 0
 		mov [esi].Hero.face_direction, DIRECTION_LEFT
+		invoke SetWeapon, esi, WEAPONTYPE_ROBOT
+		mov [esi].Hero.shoot_dx, 0
+		mov [esi].Hero.shoot_dy, 0
 		mov [esi].Hero.life, 5
 	.endif
 	mov [esi].Hero.action_imageIndex, 0
@@ -1048,7 +1051,26 @@ UpdateHeroCollisionRect PROC USES esi,
 		add eax,          80
 		mov rect.position.pos_y, eax
 		invoke ChangeHeroRect, hero, addr rect
-	.else
+	.elseif [esi].Hero.action == HEROACTION_GONE
+		mov rect.r_width,  0
+		mov rect.r_height, 0
+		mov eax, [esi].Hero.position.pos_x
+		add eax,          0
+		mov rect.position.pos_x, eax
+		mov eax, [esi].Hero.position.pos_y
+		add eax,          0
+		mov rect.position.pos_y, eax
+		invoke ChangeHeroRect, hero, addr rect
+	.elseif [esi].Hero.action == TOWERACTION_OPEN
+		mov rect.r_width,  40
+		mov rect.r_height, 40
+		mov eax, [esi].Hero.position.pos_x
+		add eax,          5
+		mov rect.position.pos_x, eax
+		mov eax, [esi].Hero.position.pos_y
+		add eax,          5
+		mov rect.position.pos_y, eax
+		invoke ChangeHeroRect, hero, addr rect
 	.endif
 	ret	
 UpdateHeroCollisionRect ENDP
