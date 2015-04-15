@@ -38,7 +38,9 @@ IDR_WAVE3 EQU 110
  IMAGETYPE_PNG db "png", 0
  
  backgroundFile db "Res\\map\\map_stage1.bmp",0
- contraLoadingImage1 db "Res\\opening.bmp",0
+ contraLoadingImage1 db "Res\\opening.png",0
+ contraOverImage1 db "Res\\gameover.png",0
+ contraWinImage1	db	"Res\\gamewin.png",0
 
  playerMoveRightFiles db "Res\\player\\player_right",0
  playerMoveLeftFiles db "Res\\player\\player_left", 0
@@ -105,11 +107,14 @@ IDR_WAVE3 EQU 110
  clock		DWORD	0
  wndstart	DWORD	0
  wndover	DWORD	0
+ wndwin		DWORD	0
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
  hBackgroundImage dd ?
  hContraLoadingImage1 dd ?
+ hContraOverImage1 dd ?
+ hContraWinImage1	dd	?
 
  hPlayerCrawlRightImage dd ?
  hPlayerCrawlLeftImage dd ?
