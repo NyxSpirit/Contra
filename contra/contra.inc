@@ -87,8 +87,6 @@ IDR_WAVE3 EQU 110
  dynamicRobotJumpLeftFile db "Res\\npc\\npc2_jump_left.png", 0
  dynamicRobotDieLeftFiles db "Res\\npc\\npc2_die_left", 0
 
- bossFiles
-
 ;============================== Window Params =========
  ClassName db "WinClass", 0
  AppName db "Contra", 0 
