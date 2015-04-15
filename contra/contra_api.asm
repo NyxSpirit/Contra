@@ -132,7 +132,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	.if		ebx >= 410 && bl == 0
 			invoke UpdateHeroAction, hero, HEROACTION_DIE
-			mov	[esi].Hero.life,1
+			sub	[esi].Hero.life,1
 			mov	[esi].Hero.position.pos_y,350
 			mov	[esi].Hero.move_dx,0
 			mov	[esi].Hero.move_dy,0
@@ -1179,6 +1179,9 @@ DeleteBridgeBlock PROC USES esi,
 			mov	eax,1536
 	.else
 			mov	eax,2112
+	.endif
+	.if index == 4
+		mov	index,2
 	.endif
 	div		img_width
 	add		eax,index

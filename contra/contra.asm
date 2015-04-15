@@ -185,7 +185,7 @@ CmdShow:DWORD
 								dec ebx
 								mov cnt, 0
 								
-								invoke DeleteBridgeBlock, edi,addr contra , addr background,cnt 
+								invoke DeleteBridgeBlock, edi,addr contra , addr background, index1
 							.endif
 							mov eax, hBridgeBoomImages[ebx * TYPE DWORD]
 							mov ebx, index1
@@ -299,6 +299,7 @@ CmdShow:DWORD
 
 		
 		invoke InitGame
+		mov contra.life,2
 
 		invoke CreateThread, 0, 0, SoundProc, 0, 0, ADDR dwThreadID
 		mov hBGMThread, eax
@@ -398,8 +399,10 @@ CmdShow:DWORD
 			invoke CloseHandle,hBGMThread
 			invoke CloseHandle,hRunThread
 			invoke GdiplusShutdown, token
+			ret
 		.elseif	wParam == VK_F1
 			mov	contra.life,30
+			ret
 		.endif
 
 		.if wParam == VK_D			
@@ -431,7 +434,28 @@ CmdShow:DWORD
 		invoke CloseHandle,hBGMThread
 		invoke CloseHandle,hRunThread
 		invoke GdiplusShutdown, token
-		invoke PostQuitMessage, 0
+		invoke PostQuitMessage, 0	
+	.elseif	contra.life == 1 && wndstart == CONTRA_STATE_RUNNING
+		mov	wndover,1
+		mov	wndstart,4
+	.elseif	wndover == 1
+		mov	wndover,0
+		mov startupinput.GdiplusVersion, 1 
+		invoke GdiplusStartup, addr token, addr startupinput, NULL
+
+		invoke UnicodeStr, ADDR  contraOverImage1, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hContraOverImage1
+		invoke	Sleep,3000
+		mov	wndstart,0
+	.elseif	wndwin == 1
+		mov	wndwin,0
+		mov startupinput.GdiplusVersion, 1 
+		invoke GdiplusStartup, addr token, addr startupinput, NULL
+
+		invoke UnicodeStr, ADDR  contraWinImage1, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hContraWinImage1
+		invoke	Sleep,3000
+		mov	wndstart,0
 	.else
 		invoke DefWindowProc, hWnd, uMsg, wParam, lParam
 		ret
