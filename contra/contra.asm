@@ -222,6 +222,7 @@ CmdShow:DWORD
    LOCAL hMemDC:HDC 
    LOCAL rect:RECT 
    LOCAL hGraphics: DWORD
+   local hBitmap : DWORD
    LOCAL buffer [64] :BYTE
 
    .if	uMsg == WM_CREATE && wndstart == CONTRA_STATE_NULL
@@ -289,6 +290,7 @@ CmdShow:DWORD
 		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerFiles, 11, addr hTowerImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerBoomFiles, 3, addr hTowerBoomImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR towerShowupFiles, 3, addr hTowerShowupImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR bridgeBoomFiles, 4, addr hBridgeBoomImages, ADDR IMAGETYPE_PNG
 
 
@@ -304,24 +306,25 @@ CmdShow:DWORD
 		mov hRunThread, eax
 
    .elseif uMsg == WM_PAINT && wndstart == CONTRA_STATE_RUNNING
+   
+		invoke GetClientRect,hWnd,addr rect 
+
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
 		invoke CreateCompatibleDC, hdc
 		mov hMemDC, eax
-		;invoke SelectObject,hMemDC,hBitmap 
-		;invoke GetClientRect,hWnd,addr rect 
-		;invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY
-		;invoke BitBlt, hDC, 0, 0
-		invoke GdipCreateFromHDC, hdc, addr hGraphics 
-		invoke GdipSetPageUnit, hGraphics, UnitPixel
+		INVOKE CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+		mov hBitmap, eax
+		INVOKE SelectObject, hMemDC, hBitmap
+		invoke GdipCreateFromHDC, hMemDC, addr hGraphics 
 
 		invoke PaintBackground, hGraphics
 		invoke PaintObjects, hGraphics
 
-		invoke GdipDeleteGraphics, hGraphics
-		
+		invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
+		invoke GdipDeleteGraphics, hGraphics
 	.elseif uMsg == WM_PAINT && wndstart == CONTRA_STATE_NULL
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
@@ -852,7 +855,8 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 
 	; keep contra in the view
 	mov background.move_length, 0
-	.if contra.position.pos_x > 210 && contra.move_dx > 0
+	.if contra.position.pos_x > 210 && contra.move_dx > 0 && background.b_offset > -MAX_MOVE_LEFT_LENGTH
+		 
 		mov eax, CONTRA_BASIC_MOV_SPEED
 		sub background.b_offset, eax
 		mov background.move_length, eax	
@@ -1036,7 +1040,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					mov eax, hDynamicRobotRunRightImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 4
+					.if [esi].Hero.action_imageIndex == 5
 						mov [esi].Hero.action_imageIndex, 0
 					.endif
 				.else
@@ -1044,7 +1048,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 					mov eax, hDynamicRobotRunLeftImages[edi * TYPE DWORD];
 					mov [esi].Hero.hImage, eax
 					inc [esi].Hero.action_imageIndex
-					.if [esi].Hero.action_imageIndex == 4
+					.if [esi].Hero.action_imageIndex == 5
 						mov [esi].Hero.action_imageIndex, 0
 					.endif
 				.endif
@@ -1144,7 +1148,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 				mov eax, hTowerBoomImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
-				.if [esi].Hero.action_imageIndex == 2
+				.if [esi].Hero.action_imageIndex == 3
 					invoke UpdateHeroAction, esi, HEROACTION_GONE
 					.continue
 				.endif		
@@ -1153,7 +1157,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 				mov eax, hTowerBoomImages[edi * TYPE DWORD];
 				mov [esi].Hero.hImage, eax
 				inc [esi].Hero.action_imageIndex
-				.if [esi].Hero.action_imageIndex == 2
+				.if [esi].Hero.action_imageIndex == 3
 					invoke UpdateHeroAction, esi, HEROACTION_GONE
 					.continue
 				.endif

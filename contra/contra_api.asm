@@ -725,7 +725,8 @@ TakeAction	PROC		USES esi,
 			.if (formerAction ==HEROACTION_RUN)
 				mov newAction, HEROACTION_JUMP
 			.endif
-			.if formerAction == HEROACTION_CRAWL && [esi].Hero.position.pos_y < 340
+			mov eax, [esi].Hero.position.pos_y
+			.if formerAction == HEROACTION_CRAWL && eax < 300
 				mov newAction, HEROACTION_FALL
 			.endif
 	.elseif command == CMD_DOWN
