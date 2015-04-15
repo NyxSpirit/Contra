@@ -53,7 +53,7 @@ IDR_WAVE3 EQU 110
  playerSwimShootRightFile db "Res\\player\\player_water_right1.png", 0
  playerSwimRightFile db "Res\\player\\player_water_right2.png", 0
  playerSwimLeftFile db "Res\\player\\player_water_left2.png", 0
- playerSwimShootLeftFile db "Res\\player\\player_water_left2.png", 0
+ playerSwimShootLeftFile db "Res\\player\\player_water_left1.png", 0
  playerFallRightFile db "Res\\player\\player_fall_right.png", 0
  playerFallLeftFile db "Res\\player\\player_fall_left.png", 0
  playerDiveFile db "Res\\player\\player_dive.png", 0
