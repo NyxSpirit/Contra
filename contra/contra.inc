@@ -19,6 +19,7 @@ ContraTakeAction PROTO
 StaticRobotsTakeAction PROTO
 DynamicRobotsTakeAction PROTO
 TowerTakeAction PROTO
+BossTakeAction PROTO
 
 OpenFire   PROTO  :PTR Bullets, :PTR Hero
 BulletsMove PROTO
@@ -42,6 +43,7 @@ IDR_WAVE3 EQU 110
  contraOverImage1 db "Res\\gameover.png",0
  contraWinImage1	db	"Res\\gamewin.png",0
 
+ bossFile db "Res\\boss\\boss.png", 0
  playerMoveRightFiles db "Res\\player\\player_right",0
  playerMoveLeftFiles db "Res\\player\\player_left", 0
  playerJumpRightFiles db "Res\\player\\player_jump_right", 0
@@ -95,6 +97,7 @@ IDR_WAVE3 EQU 110
 
 ;=============================== Game params ===========
  contra Hero <>
+ boss Hero <>
  background Background <>
  contraBullets Bullets <>
  enemyBullets Bullets <>
@@ -111,11 +114,13 @@ IDR_WAVE3 EQU 110
  ;=============================  Window and View Handles ========
  hInstance HINSTANCE ?
  
+ 
  hBackgroundImage dd ?
  hContraLoadingImage1 dd ?
  hContraOverImage1 dd ?
  hContraWinImage1	dd	?
 
+ hBossImage dd   ?
  hPlayerCrawlRightImage dd ?
  hPlayerCrawlLeftImage dd ?
  hPlayerStandRightImage dd ?
@@ -163,7 +168,7 @@ IDR_WAVE3 EQU 110
 
  hBridgeBoomImages dd 4 dup (?)
 
- hBulletImages dd 4 dup (?)
+ hBulletImages dd 9 dup (?)
 
  hMusic dd ?
 

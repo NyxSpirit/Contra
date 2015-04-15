@@ -79,6 +79,7 @@ CmdShow:DWORD
 		invoke DynamicRobotsTakeAction 
 		invoke StaticRobotsTakeAction
 		invoke TowerTakeAction
+		invoke BossTakeAction
 
 		invoke BulletsMove
 
@@ -95,6 +96,8 @@ CmdShow:DWORD
 	local newRobot: PTR Hero
 	local startTime: DWORD
 	local cnt :DWORD
+	local posx :SDWORD
+	local posy :SDWORD
 	mov ecx, eventQueue.number
 	.if ecx == 0
 		ret
@@ -150,10 +153,21 @@ CmdShow:DWORD
 						mov [edi].Hero.face_direction, DIRECTION_LEFT
 						mov [edi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
 					.endif
-					mov ebx, clock
-					mov startTime, ebx
-					add startTime, 20
-					invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_CREATEDYNAMICROBOT, 0, startTime, 0, SCREEN_WIDTH, 20
+					.if background.b_offset > 200-MAX_MOVE_LEFT_LENGTH
+					    mov eax, clock
+						mov bl, 5
+						div bl
+						.if ah < 4
+							mov posx, SCREEN_WIDTH
+						.else 
+							mov posx, -100
+						.endif
+						mov posy, 20
+						mov ebx, clock
+						mov startTime, ebx
+						add startTime, 30
+						invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_CREATEDYNAMICROBOT, 0, startTime, 0, posx, posy
+					.endif
 				.elseif [esi].Event.e_type == EVENTTYPE_CREATETOWER
 					invoke CreateRobot, addr towerQueue, HEROTYPE_TOWER,  [esi].Event.position.pos_x, [esi].Event.position.pos_y
 					mov edi, eax
@@ -198,6 +212,12 @@ CmdShow:DWORD
 						inc startTime
 						invoke CreateRobotEvent, addr eventQueue, EVENTTYPE_BRIDGEBOOM, [esi].Event.actor,  startTime, 0, [esi].Event.position.pos_x, [esi].Event.position.pos_y			
 					.endif
+				.elseif [esi].Event.e_type == EVENTTYPE_CREATEBOSS
+					invoke CreateBoss, addr boss,   [esi].Event.position.pos_x, [esi].Event.position.pos_y
+					lea edi, boss
+					mov [edi].Hero.shoot, 1
+					mov [edi].Hero.weapon.time_to_next_shot, 0
+
 				.endif
 			; End execution:
 				
@@ -299,12 +319,14 @@ CmdShow:DWORD
 		invoke UnicodeStr, ADDR  dynamicRobotJumpLeftFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr  hDynamicRobotJumpLeftImage
 
-		invoke LoadImageSeries, ADDR bulletFiles, 4, addr hBulletImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR bulletFiles, 9, addr hBulletImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerFiles, 11, addr hTowerImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerBoomFiles, 3, addr hTowerBoomImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR towerShowupFiles, 3, addr hTowerShowupImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR bridgeBoomFiles, 4, addr hBridgeBoomImages, ADDR IMAGETYPE_PNG
-
+		
+		invoke UnicodeStr, ADDR  bossFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr  hBossImage
 
 		; ==========LoadImageResources end
 
@@ -594,6 +616,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		dec cnt
 	.endw
 
+	invoke PaintObject, hGraphics, addr boss
 	ret
  PaintObjects ENDP
  
@@ -1303,12 +1326,77 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
  TowerTakeAction ENDP
  
  
+ BossTakeAction PROC
+	lea esi, boss
+	.if boss.shoot == 1
+		mov eax, [esi].Hero.range.position.pos_x
+		add eax, 40
+		mov ebx, [esi].Hero.range.position.pos_x
+		sub ebx, 40
+		.if contra.range.position.pos_x > eax
+			mov [esi].Hero.face_direction, DIRECTION_RIGHT
+			mov [esi].Hero.shoot_dx, 1
+		.elseif contra.range.position.pos_x < ebx
+			mov [esi].Hero.face_direction, DIRECTION_LEFT
+			mov [esi].Hero.shoot_dx, -1
+		.else
+			mov [esi].Hero.shoot_dx, 0
+		.endif
+
+		mov eax, [esi].Hero.range.position.pos_y
+		add eax, 80
+		mov ebx, [esi].Hero.range.position.pos_y
+		sub ebx, 80
+
+		.if contra.range.position.pos_y > eax
+			mov [esi].Hero.shoot_dy, 1
+		.elseif contra.range.position.pos_y < ebx
+			mov [esi].Hero.shoot_dy, -1
+		.else
+			.if [esi].Hero.shoot_dx == 0
+				mov [esi].Hero.shoot_dx, 1
+			.endif
+				mov [esi].Hero.shoot_dy, 0
+		.endif
+ 		mov ebx, [esi].Hero.weapon.bullet_speed
+		mov eax, [esi].Hero.shoot_dx
+		imul bl
+		mov [esi].Hero.shoot_dx, eax
+		mov eax, [esi].Hero.shoot_dy
+		imul bl
+		mov [esi].Hero.shoot_dy, eax
+		mov eax, hBossImage
+		mov [esi].Hero.hImage, eax
+		.if [esi].Hero.shoot == 1 && [esi].Hero.action == HEROACTION_STAND
+			invoke OpenFire, addr enemyBullets, esi
+		.endif
+
+		.if [esi].Hero.action == HEROACTION_STAND
+			invoke CollisionBulletJudge, esi, addr contraBullets
+		.endif	
+		
+		mov [esi].Hero.move_dx, 0
+		mov [esi].Hero.move_dy, 0
+		invoke UpdateHeroPosition, esi, background.move_length
+		
+	.endif
+	ret
+BossTakeAction ENDP 
  
  OpenFire PROC USES esi,
 	pBullets: PTR Bullets, actor: PTR Hero
+
 	mov esi, actor
 	.if [esi].Hero.identity == HEROTYPE_BLUECONTRA
 		mov eax, 1
+	.elseif [esi].Hero.identity == HEROTYPE_BOSS
+		mov eax, clock
+		mov bl, 5
+		div bl
+		movzx ebx, ah
+		mov eax, ebx
+		add eax, 5
+		 
 	.else
 		mov eax, 3
 	.endif
@@ -1382,7 +1470,6 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	.endw
 	ret
  BulletsMove ENDP
-
 ; ==============================  Functions
 ;;;;;;;;
 ;;;;;;;;

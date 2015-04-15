@@ -516,6 +516,16 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.position.pos_y, 192
 	inc [esi].Events.number
 	add edi, TYPE Event
+
+	mov [edi].Event.e_type, EVENTTYPE_CREATEBOSS
+	mov [edi].Event.actor, 0
+	mov [edi].Event.clock_limit, 0
+	mov [edi].Event.location_limit, 600-400
+	mov [edi].Event.position.pos_x, 400
+	mov [edi].Event.position.pos_y, 100
+	inc [esi].Events.number
+
+	add edi, TYPE Event
 	ret
 	
 InitEvents ENDP
@@ -545,6 +555,28 @@ InitContra PROC USES esi,
 	invoke UpdateHeroCollisionRect, hero
 	ret
 InitContra ENDP
+CreateBoss PROC USES esi, 
+	boss :PTR Hero, posx:SDWORD, posy:SDWORD
+	mov esi, boss
+	mov eax, posx
+	mov [esi].Hero.position.pos_x, eax
+	mov eax, posy
+	mov [esi].Hero.position.pos_y, eax 
+	mov [esi].Hero.identity, HEROTYPE_BOSS
+	
+		mov [esi].Hero.action, HEROACTION_STAND
+		mov [esi].Hero.move_dx, 0
+		mov [esi].Hero.move_dy, 0
+		mov [esi].Hero.invincible_time, 0
+		mov [esi].Hero.shoot, 0
+		mov [esi].Hero.face_direction, DIRECTION_LEFT
+		invoke SetWeapon, esi, WEAPONTYPE_BOSS
+		mov [esi].Hero.shoot_dx, 0
+		mov [esi].Hero.shoot_dy, 0
+		mov [esi].Hero.life, 10000
+	ret
+
+CreateBoss ENDP
 ;==================================
 CreateRobot PROC USES esi,
 	robots:PTR Robots, r_type:BYTE, posx:SDWORD, posy:SDWORD
@@ -556,13 +588,16 @@ CreateRobot PROC USES esi,
 	mov bl, TYPE Hero
 	mul bl
 	lea esi, [esi].Robots.robots[eax]
-	
 	mov eax, posx
 	mov [esi].Hero.position.pos_x, eax
 	mov eax, posy
 	mov [esi].Hero.position.pos_y, eax
 	mov al, r_type
 	mov [esi].Hero.identity, al
+
+	
+	mov [esi].Hero.action_imageIndex, 0
+	mov [esi].Hero.jump_height, 0
 	.if r_type == HEROTYPE_STATICROBOT
 		mov [esi].Hero.action, HEROACTION_STAND
 		mov [esi].Hero.move_dx, 0
@@ -576,7 +611,11 @@ CreateRobot PROC USES esi,
 		mov [esi].Hero.life, 1
 	.elseif r_type == HEROTYPE_DYNAMICROBOT
 		mov [esi].Hero.action, HEROACTION_STAND
-		mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+		.if posx > 250
+			mov [esi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
+		.else
+			mov [esi].Hero.move_dx, CONTRA_BASIC_MOV_SPEED
+		.endif
 		mov [esi].Hero.move_dy, 0
 		mov [esi].Hero.life, 1
 	.elseif r_type == HEROTYPE_TOWER
@@ -590,9 +629,8 @@ CreateRobot PROC USES esi,
 		mov [esi].Hero.shoot_dx, 0
 		mov [esi].Hero.shoot_dy, 0
 		mov [esi].Hero.life, 5
+	.else 
 	.endif
-	mov [esi].Hero.action_imageIndex, 0
-	mov [esi].Hero.jump_height, 0
 	
 	invoke UpdateHeroCollisionRect, esi
 
@@ -851,7 +889,11 @@ SetWeapon	PROC	USES esi,
 		mov		[esi].Weapon.time_to_next_shot,  0
 		mov     [esi].Weapon.triple_bullet,      1
 		mov     [esi].Weapon.bullet_speed,      25
-	.else
+	.elseif w_type == WEAPONTYPE_BOSS
+		mov		[esi].Weapon.shot_interval_time, 5
+		mov		[esi].Weapon.time_to_next_shot,  0
+		mov     [esi].Weapon.triple_bullet,      0
+		mov     [esi].Weapon.bullet_speed,      10
 	.endif
 
 	ret
