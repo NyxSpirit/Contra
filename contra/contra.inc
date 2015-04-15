@@ -53,9 +53,17 @@ IDR_WAVE2 EQU 107
  playerSwimShootRightFile db "Res\\player\\player_water_right1.png", 0
  playerSwimRightFile db "Res\\player\\player_water_right2.png", 0
  playerSwimLeftFile db "Res\\player\\player_water_left2.png", 0
+ playerSwimShootLeftFile db "Res\\player\\player_water_left2.png", 0
  playerFallRightFile db "Res\\player\\player_fall_right.png", 0
  playerFallLeftFile db "Res\\player\\player_fall_left.png", 0
  playerDiveFile db "Res\\player\\player_dive.png", 0
+ 
+ playerShootLeftUpFiles db "Res\\player\\player_leftup", 0
+ playerShootUpLeftFiles db "Res\\player\\player_upleft", 0
+ playerShootUpRightFiles db "Res\\player\\player_upright", 0
+ playerShootLeftDownFiles db "Res\\player\\player_leftdown", 0
+ playerShootRightUpFiles db "Res\\player\\player_rightup", 0
+ playerShootRightDownFiles db "Res\\player\\player_rightdown", 0
 
  bulletFiles  db "Res\\bullet\\bullet", 0
  towerFiles db "Res\\barbette\\barbette", 0
@@ -110,10 +118,17 @@ IDR_WAVE2 EQU 107
  hPlayerSwimLeftImage dd ?
  hPlayerSwimRightImage dd ?
  hPlayerSwimShootRightImage dd ?
+ hPlayerSwimShootLeftImage dd ?
  hPlayerFallRightImage dd ?
  hPlayerFallLeftImage dd ?
  hPlayerDiveImage dd ?
 
+ hPlayerShootUpLeftImages dd 2 dup (?) 
+ hPlayerShootUpRightImages dd 2 dup (?) 
+ hPlayerShootLeftDownImages dd 3 dup (?)
+ hPlayerShootLeftUpImages dd 3 dup (?)
+ hPlayerShootRightDownImages dd 3 dup (?)
+ hPlayerShootRightUpImages dd 3 dup (?)
  hPlayerMoveRightImages dd 6 dup (?)
  hPlayerMoveLeftImages dd 6 dup (?)
  hPlayerJumpRightImages dd 4 dup (?)
