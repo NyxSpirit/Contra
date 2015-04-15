@@ -50,11 +50,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol />
-      <AdditionalLibraryDirectories>D:\masm32\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\masm32\lib;C:\irvine</AdditionalLibraryDirectories>
       <AdditionalDependencies />
     </Link>
     <MASM>
-      <IncludePaths>d:\masm32\include;d:\masm32\lib;</IncludePaths>
+      <IncludePaths>d:\masm32\include;d:\masm32\lib;C:\Irvine</IncludePaths>
     </MASM>
     <MASM>
       <WarningLevel>0</WarningLevel>
@@ -74,15 +74,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <MASM Include="main.asm">
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">d:\masm32\include;d:\masm32\lib;</IncludePaths>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="contra.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="contra.asm" />
+    <MASM Include="contra_api.asm" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="contra.inc" />
+    <None Include="contra_api.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

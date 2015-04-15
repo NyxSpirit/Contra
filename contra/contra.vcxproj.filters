@@ -45,21 +45,5 @@
     <None Include="contra_api.inc">
       <Filter>源文件\INC</Filter>
     </None>
-    <None Include="wave3.bin">
-      <Filter>资源文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="Res\bgm1.wav">
-      <Filter>资源文件</Filter>
-    </Media>
-    <Media Include="Res\opening.wav">
-      <Filter>资源文件</Filter>
-    </Media>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Res\game over.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
   </ItemGroup>
 </Project>
