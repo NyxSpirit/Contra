@@ -523,9 +523,9 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATEBOSS
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 6800-400
+	mov [edi].Event.location_limit, 6600-400
 	mov [edi].Event.position.pos_x, 400
-	mov [edi].Event.position.pos_y, 20
+	mov [edi].Event.position.pos_y, 60
 	inc [esi].Events.number
 
 	add edi, TYPE Event
@@ -1019,7 +1019,7 @@ CreateBullet PROC USES esi edi,
 	shr eax, 1
 	add eax, [edi].Hero.range.position.pos_x
 	add eax, shootOffsetX
-	add	eax,	32
+	;add	eax,	20
 	.if	[esi].Hero.face_direction == DIRECTION_RIGHT
 		;sub	eax,80
 	.endif

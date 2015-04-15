@@ -1417,6 +1417,15 @@ BossTakeAction ENDP
 		mov eax, 1
 	.elseif [esi].Hero.identity == HEROTYPE_BOSS
 		mov eax, clock
+		.if eax > 500
+			sub eax, 500
+		.endif 
+		.if eax > 500
+			sub eax, 500
+		.endif 
+		.if eax > 500
+			sub eax, 500
+		.endif 
 		mov ebx, [esi].Hero.weapon.shot_interval_time
 		div bl
 		movzx ebx, al
