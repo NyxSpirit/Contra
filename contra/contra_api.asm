@@ -128,6 +128,9 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 
 	mov		ecx,background
 	mov		eax,position
+	.if		position < 0
+			ret
+	.endif
 	mov		bl,[ecx].Background.b_array[eax]
 
 	.if		ebx >= 410 && bl == 0
@@ -526,7 +529,7 @@ InitContra PROC USES esi,
 	 hero:PTR Hero
 	mov esi, hero
 	mov [esi].Hero.position.pos_x, 0
-	mov [esi].Hero.position.pos_y, -100
+	mov [esi].Hero.position.pos_y, -50
 	mov [esi].Hero.action, HEROACTION_JUMP
 	mov [esi].Hero.move_dx, 0
 	mov [esi].Hero.move_dy, CONTRA_BASIC_JUMP_SPEED
@@ -965,9 +968,9 @@ CreateBullet PROC USES esi edi,
 	shr eax, 1
 	add eax, [edi].Hero.range.position.pos_x
 	add eax, shootOffsetX
-	add	eax,	64
+	add	eax,	32
 	.if	[esi].Hero.face_direction == DIRECTION_RIGHT
-		sub	eax,80
+		;sub	eax,80
 	.endif
 	mov [esi].Bullet.position.pos_x, eax
 	mov [esi].Bullet.range.position.pos_x, eax
@@ -1062,7 +1065,7 @@ UpdateHeroCollisionRect PROC USES esi,
 		invoke ChangeHeroRect, hero, addr rect
 	.elseif [esi].Hero.action == HEROACTION_JUMP
 		mov rect.r_width,  30
-		mov rect.r_height, 68
+		mov rect.r_height, 58
 		mov eax, [esi].Hero.position.pos_x
 		add eax,          20
 		mov rect.position.pos_x, eax
