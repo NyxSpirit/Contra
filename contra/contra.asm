@@ -250,6 +250,13 @@ CmdShow:DWORD
 		invoke LoadImageSeries, ADDR playerDieRightFiles, 7, addr hPlayerDieRightImages, ADDR IMAGETYPE_PNG
 		invoke LoadImageSeries, ADDR playerDieLeftFiles, 7, addr hPlayerDieLeftImages, ADDR IMAGETYPE_PNG
 		
+		invoke LoadImageSeries, ADDR playerShootUpLeftFiles, 2, addr hPlayerShootUpLeftImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerShootUpRightFiles, 2, addr hPlayerShootUpRightImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerShootRightUpFiles, 3, addr hPlayerShootRightUpImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerShootRightDownFiles, 3, addr hPlayerShootRightDownImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerShootLeftUpFiles, 3, addr hPlayerShootLeftUpImages, ADDR IMAGETYPE_PNG
+		invoke LoadImageSeries, ADDR playerShootLeftDownFiles, 3, addr hPlayerShootLeftDownImages, ADDR IMAGETYPE_PNG
+
 		invoke UnicodeStr, ADDR playerStandRightFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerStandRightImage
 		invoke UnicodeStr, ADDR playerStandLeftFile, ADDR buffer
@@ -330,6 +337,7 @@ CmdShow:DWORD
 		invoke DeleteDC, hMemDC
 		invoke EndPaint,hWnd,addr ps
 		invoke GdipDeleteGraphics, hGraphics
+
 	.elseif uMsg == WM_PAINT && wndstart == CONTRA_STATE_NULL
 		invoke BeginPaint,hWnd,addr ps 
 		mov hdc, eax
@@ -633,7 +641,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	mov eax, [esi].Bridge.position.pos_y
 	mov posy,   eax
 	mov imageWidth , 64
-	mov imageHeight , 100
+	mov imageHeight , 64
 	
 	mov edi, hImage
 	mov eax, [edi]
@@ -673,7 +681,7 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	mov eax, [esi].Bridge.position.pos_y
 	mov posy,   eax
 	mov imageWidth , 64
-	mov imageHeight , 100
+	mov imageHeight , 64
 	
 	mov edi, hImage
 	mov eax, [edi]
@@ -790,23 +798,71 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			mov contra.hImage, eax
 		.endif
 	.elseif contra.action == HEROACTION_RUN
+		mov esi, contra.action_imageIndex
 		.if contra.face_direction == DIRECTION_RIGHT
-			mov esi, contra.action_imageIndex
-			mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
-			mov contra.hImage, eax
-			inc contra.action_imageIndex
-			.if contra.action_imageIndex == 6
-				mov contra.action_imageIndex, 0
+			.if contra.shoot == 0
+				mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex >= 6
+					mov contra.action_imageIndex, 0
+				.endif
+			.elseif contra.shoot_dy > 0
+				mov eax, hPlayerShootRightDownImages[esi *TYPE DWORD]
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex >= 3
+					mov contra.action_imageIndex, 0
+				.endif
+			.elseif contra.shoot_dy < 0
+				mov eax, hPlayerShootRightUpImages[esi *TYPE DWORD]
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex >= 3
+					mov contra.action_imageIndex, 0
+				.endif
+			.else
+				mov eax, hPlayerMoveRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex >= 6
+					mov contra.action_imageIndex, 0
+				.endif
 			.endif
 		.else
-			mov esi, contra.action_imageIndex
-			mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
-			mov contra.hImage, eax
-			inc contra.action_imageIndex
-			.if contra.action_imageIndex == 6
-				mov contra.action_imageIndex, 0
+			.if contra.shoot == 1
+				.if contra.shoot_dy > 0
+					mov eax, hPlayerShootLeftDownImages[esi *TYPE DWORD]
+					mov contra.hImage, eax
+					inc contra.action_imageIndex
+					.if contra.action_imageIndex >= 3
+						mov contra.action_imageIndex, 0
+					.endif
+				.elseif contra.shoot_dy < 0
+					mov eax, hPlayerShootLeftUpImages[esi *TYPE DWORD]
+					mov contra.hImage, eax
+					inc contra.action_imageIndex
+					.if contra.action_imageIndex >= 3
+						mov contra.action_imageIndex, 0
+					.endif
+				.else
+					mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
+					mov contra.hImage, eax
+					inc contra.action_imageIndex
+					.if contra.action_imageIndex >= 6
+						mov contra.action_imageIndex, 0
+					.endif
+				.endif
+			.else
+				mov eax, hPlayerMoveLeftImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex >= 6
+					mov contra.action_imageIndex, 0
+				.endif
 			.endif
 		.endif
+			
 	.elseif contra.action == HEROACTION_DIVE
 		.if contra.jump_height < CONTRA_FLOAT_HEIGHT
 			mov contra.move_dy, -CONTRA_FLOAT_SPEED
@@ -826,11 +882,37 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		.endif
 	.else
 		.if contra.face_direction == DIRECTION_RIGHT
-			mov eax, hPlayerStandRightImage;
-			mov contra.hImage, eax
+			.if contra.shoot == 0
+				mov eax, hPlayerStandRightImage;
+				mov contra.hImage, eax
+			.elseif contra.shoot_dy < 0
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerShootUpRightImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 2
+					mov contra.action_imageIndex, 0
+				.endif
+			.else
+				mov eax, hPlayerStandRightImage;
+				mov contra.hImage, eax
+			.endif
 		.else
-			mov eax, hPlayerStandLeftImage;
-			mov contra.hImage, eax
+			.if contra.shoot == 0
+				mov eax, hPlayerStandLeftImage;
+				mov contra.hImage, eax
+			.elseif contra.shoot_dy < 0
+				mov esi, contra.action_imageIndex
+				mov eax, hPlayerShootUpLeftImages[esi * TYPE DWORD];
+				mov contra.hImage, eax
+				inc contra.action_imageIndex
+				.if contra.action_imageIndex == 2
+					mov contra.action_imageIndex, 0
+				.endif
+			.else
+				mov eax, hPlayerStandLeftImage;
+				mov contra.hImage, eax
+			.endif
 		.endif
 	.endif
 		
