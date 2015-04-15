@@ -181,7 +181,7 @@ CollisionBackgroundJudge	PROC hero:PTR Hero,background:PTR BackGround
 	mov		bl,[ecx].Background.b_array[eax]
 	.if	bl == BGTYPE_WATER			
 			invoke UpdateHeroAction, hero, HEROACTION_SWIM	
-			mov	[esi].Hero.move_dy,0				
+			;mov	[esi].Hero.move_dy,0				
 	.endif
 
 	mov		ecx,background

@@ -258,6 +258,10 @@ CmdShow:DWORD
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimRightImage
 		invoke UnicodeStr, ADDR playerSwimLeftFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimLeftImage
+		invoke UnicodeStr, ADDR playerSwimShootRightFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimShootRightImage
+		invoke UnicodeStr, ADDR playerSwimShootLeftFile, ADDR buffer
+		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerSwimShootLeftImage
 		invoke UnicodeStr, ADDR playerCrawlRightFile, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr hPlayerCrawlRightImage
 		invoke UnicodeStr, ADDR playerCrawlLeftFile, ADDR buffer
@@ -755,17 +759,26 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 			inc contra.action_imageIndex
 		.endif
 	.elseif contra.action == HEROACTION_SWIM
-		.if contra.jump_height < CONTRA_FLOAT_HEIGHT
+		.if contra.jump_height == 0
 			mov contra.move_dy, -CONTRA_FLOAT_SPEED
-			add contra.jump_height, CONTRA_FLOAT_SPEED
-		.else
+		.elseif contra.jump_height == CONTRA_FLOAT_HEIGHT
 			mov contra.move_dy, CONTRA_FLOAT_SPEED
 		.endif
+			mov eax, contra.move_dy
+			sub contra.jump_height, eax
 		.if contra.face_direction == DIRECTION_RIGHT
-			mov eax, hPlayerSwimRightImage
+			.if contra.shoot == 0
+				mov eax, hPlayerSwimRightImage
+			.else 
+				mov eax, hPlayerSwimShootRightImage
+			.endif
 			mov contra.hImage, eax
 		.else
-			mov eax, hPlayerSwimLeftImage
+			.if contra.shoot == 0
+				mov eax, hPlayerSwimLeftImage
+			.else 
+				mov eax, hPlayerSwimShootLeftImage
+			.endif
 			mov contra.hImage, eax
 		.endif
 	.elseif contra.action == HEROACTION_JUMP
