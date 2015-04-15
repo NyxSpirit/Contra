@@ -229,7 +229,8 @@ CmdShow:DWORD
 		invoke GdiplusStartup, addr token, addr startupinput, NULL
 		invoke UnicodeStr, ADDR  contraLoadingImage1, ADDR buffer
 		invoke GdipLoadImageFromFile, addr buffer, addr  hContraLoadingImage1
- 		invoke PlaySound, IDR_WAVE2, hInstance,SND_RESOURCE or SND_ASYNC
+
+ 		invoke PlaySound, IDR_WAVE3, hInstance,SND_RESOURCE or SND_ASYNC
    .elseif wndstart == CONTRA_STATE_START
 
 		mov	wndstart,CONTRA_STATE_RUNNING	
@@ -510,11 +511,6 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 	invoke PlaySound, IDR_WAVE1, hInstance,SND_RESOURCE or SND_ASYNC
 	ret
  SoundProc ENDP
-
- OpeningSoundProc PROC
-	invoke PlaySound, IDR_WAVE2, hInstance,SND_RESOURCE or SND_ASYNC
-	ret
- OpeningSoundProc ENDP
  
  PaintObjects PROC USES ecx esi,
 	 hGraphics:DWORD
