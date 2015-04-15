@@ -154,7 +154,17 @@ CmdShow:DWORD
 						mov [edi].Hero.move_dx, -CONTRA_BASIC_MOV_SPEED
 					.endif
 					.if background.b_offset > 200-MAX_MOVE_LEFT_LENGTH
-					    mov eax, clock
+					    mov edx, 0
+						mov eax, clock
+						.if eax > 500
+							sub eax, 500
+						.endif
+						.if eax > 500
+							sub eax, 500
+						.endif
+						.if eax > 500
+							sub eax, 500
+						.endif
 						mov bl, 5
 						div bl
 						.if ah < 4
@@ -214,9 +224,6 @@ CmdShow:DWORD
 					.endif
 				.elseif [esi].Event.e_type == EVENTTYPE_CREATEBOSS
 					invoke CreateBoss, addr boss,   [esi].Event.position.pos_x, [esi].Event.position.pos_y
-					lea edi, boss
-					mov [edi].Hero.shoot, 1
-					mov [edi].Hero.weapon.time_to_next_shot, 0
 
 				.endif
 			; End execution:
@@ -1367,16 +1374,35 @@ LoadImageSeries PROC, basicFileName: DWORD, number: BYTE, seriesHandle: DWORD, i
 		mov [esi].Hero.shoot_dy, eax
 		mov eax, hBossImage
 		mov [esi].Hero.hImage, eax
-		.if [esi].Hero.shoot == 1 && [esi].Hero.action == HEROACTION_STAND
+		.if [esi].Hero.shoot == 1  
 			invoke OpenFire, addr enemyBullets, esi
 		.endif
-
-		.if [esi].Hero.action == HEROACTION_STAND
-			invoke CollisionBulletJudge, esi, addr contraBullets
-		.endif	
-		
-		mov [esi].Hero.move_dx, 0
-		mov [esi].Hero.move_dy, 0
+		 
+		invoke CollisionBulletJudge, esi, addr contraBullets
+		 
+		 mov eax, clock
+		 .if eax > 500
+			sub eax, 500
+		.endif
+		.if eax > 500
+			sub eax, 500
+		.endif
+		.if eax > 500
+			sub eax, 500
+		.endif
+		 mov bl, 4
+		 div bl
+		.if ah == 0
+			mov [esi].Hero.move_dx, -40
+		.elseif ah == 2
+			mov [esi].Hero.move_dx, 40
+		.endif
+		.if ah == 1
+			mov [esi].Hero.move_dy, 40
+		.elseif ah == 3
+			mov [esi].Hero.move_dy, -40
+		.endif
+		;mov [esi].Hero.move_dy, 0
 		invoke UpdateHeroPosition, esi, background.move_length
 		
 	.endif
@@ -1391,18 +1417,23 @@ BossTakeAction ENDP
 		mov eax, 1
 	.elseif [esi].Hero.identity == HEROTYPE_BOSS
 		mov eax, clock
+		mov ebx, [esi].Hero.weapon.shot_interval_time
+		div bl
+		movzx ebx, al
+		mov eax, ebx
 		mov bl, 5
 		div bl
 		movzx ebx, ah
 		mov eax, ebx
-		add eax, 5
-		 
+		add eax, 4
 	.else
 		mov eax, 3
 	.endif
 	lea esi, [esi].Hero.weapon
 	.if [esi].Weapon.time_to_next_shot == 0
-		invoke CreateBullet, pBullets, actor, hBulletImages[eax * TYPE DWORD]
+		mov ebx,  hBulletImages[eax * TYPE DWORD] 
+		invoke CreateBullet, pBullets, actor, ebx
+		
 		mov eax, [esi].Weapon.shot_interval_time
 		mov [esi].Weapon.time_to_next_shot, eax
 	.else

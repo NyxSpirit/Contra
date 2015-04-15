@@ -70,9 +70,12 @@ CollisionBulletJudge	PROC hero:PTR Hero,bullets:PTR Bullets
 L1:
 	invoke CollisionJudge,addr [esi].Hero.range,addr [edi].Bullet.range
 	.if	eax == 1
-		invoke UpdateHeroAction,hero,HEROACTION_DIE 
+		
 		mov	esi,hero
 		sub	[esi].Hero.life,1
+		.if [esi].Hero.life == 0
+			invoke UpdateHeroAction,hero,HEROACTION_DIE 
+		.endif
 		invoke DeleteBullet,bullets,index
 	.endif
 	add	edi,c_offset
@@ -520,9 +523,9 @@ InitEvents PROC USES esi edi,events:PTR Events
 	mov [edi].Event.e_type, EVENTTYPE_CREATEBOSS
 	mov [edi].Event.actor, 0
 	mov [edi].Event.clock_limit, 0
-	mov [edi].Event.location_limit, 600-400
+	mov [edi].Event.location_limit, 6800-400
 	mov [edi].Event.position.pos_x, 400
-	mov [edi].Event.position.pos_y, 100
+	mov [edi].Event.position.pos_y, 20
 	inc [esi].Events.number
 
 	add edi, TYPE Event
@@ -553,6 +556,7 @@ InitContra PROC USES esi,
 	mov [esi].Hero.action_imageIndex, 0
 	mov [esi].Hero.jump_height, MAX_JUMP_HEIGHT
 	invoke UpdateHeroCollisionRect, hero
+	mov [esi].Hero.life, 1
 	ret
 InitContra ENDP
 CreateBoss PROC USES esi, 
@@ -560,17 +564,22 @@ CreateBoss PROC USES esi,
 	mov esi, boss
 	mov eax, posx
 	mov [esi].Hero.position.pos_x, eax
+	mov [esi].Hero.range.position.pos_x, eax
+
 	mov eax, posy
 	mov [esi].Hero.position.pos_y, eax 
+	mov [esi].Hero.range.position.pos_y, eax
 	mov [esi].Hero.identity, HEROTYPE_BOSS
 	
 		mov [esi].Hero.action, HEROACTION_STAND
 		mov [esi].Hero.move_dx, 0
 		mov [esi].Hero.move_dy, 0
 		mov [esi].Hero.invincible_time, 0
-		mov [esi].Hero.shoot, 0
+		mov [esi].Hero.shoot, 1
 		mov [esi].Hero.face_direction, DIRECTION_LEFT
 		invoke SetWeapon, esi, WEAPONTYPE_BOSS
+		mov [esi].Hero.range.r_width, 100
+		mov [esi].Hero.range.r_height, 64
 		mov [esi].Hero.shoot_dx, 0
 		mov [esi].Hero.shoot_dy, 0
 		mov [esi].Hero.life, 10000
